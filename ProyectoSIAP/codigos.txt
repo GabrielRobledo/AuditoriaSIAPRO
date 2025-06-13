@@ -1,0 +1,124 @@
+# Leer y procesar la hoja 3 para nomencladores y módulos
+dfNomen = pd.read_excel('BasePami.xlsx', sheet_name='Hoja3')
+periodo=dfNomen.iloc[2, 0]
+cursor.execute(f"""
+        INSERT INTO VigenciaNomenclador (periodo) 
+        VALUES ('{periodo}')""")
+db.commit()
+
+idVigen = cursor.execute("""SELECT LAST_INSERT_ID(idVigencia) FROM vigencianomenclador;""")
+
+# Inserción de módulos y nomencladores
+for index, row in dfNomen.iloc[5:].iterrows():
+    cursor.execute(f"""SELECT idModulo FROM Modulo WHERE idModulo = {dfNomen.iloc[index, 0]}""")
+    result = cursor.fetchone()
+    if result is None:
+        cursor.execute("""
+        INSERT INTO Modulo (idModulo, descripcion) 
+        VALUES (%s, %s)""", (dfNomen.iloc[index, 0], dfNomen.iloc[index, 18]))
+
+    cursor.execute(f"""SELECT idNomenclador FROM Nomenclador WHERE codPractica = {dfNomen.iloc[index, 1]}""")
+    result = cursor.fetchone()
+    if result is None:
+        cursor.execute("""
+        INSERT INTO Nomenclador (codPractica, descripcion, idModulo, idVigencia) 
+        VALUES (%s, %s, %s, %s)""", (dfNomen.iloc[index, 1], dfNomen.iloc[index, 3], dfNomen.iloc[index, 0], idVigen))    
+db.commit()
+
+#Insercion de Importes de cada practica nomenclada
+for index, row in dfNomen.iloc[5:].iterrows():
+    
+    cursor.execute(f"""SELECT idNomenclador FROM Nomenclador WHERE codPractica = {dfNomen.iloc[index, 1]}""")
+    idNom = cursor.fetchone()
+    if idNom is None:
+        print("PRACTICA NO NOMENCLADA!!!")
+        continue
+    cursor.execute("""
+        INSERT INTO Nomenclador_Importes (idNomenclador, periodo, importe) 
+        VALUES (%s, %s, %s)""", (idNom, periodo, dfNomen.iloc[index, 4]))
+db.commit()    
+
+# Inserción de atenciones
+for index, row in df.iterrows():
+    cursor.execute(f"""SELECT idNomenclador FROM Nomenclador WHERE codPractica = {df.loc[index, "PRACTICA"]}""")
+    idNom = cursor.fetchone()
+    if idNom is None:
+        print("PRACTICA NO NOMENCLADA!!!")
+        continue
+
+    nrobene = str(df.loc[index, "NRO_BENEFICIO"]) + "-0" + str(df.loc[index, "GRADO_PARENTESCO"])
+    cursor.execute(f"""SELECT idBeneficiario FROM Beneficiario WHERE NroBeneficiario = '{nrobene}'""")
+    idBen = cursor.fetchone()
+
+    cursor.execute(f"""SELECT idEfector FROM Efector WHERE codPrestador = '{df.loc[index, "cod"]}'""")
+    idEfec = cursor.fetchone()
+
+    op1 = "'" + str(df.iloc[index, 7]) + "'"
+    mat ="'" + str(df.iloc[index, 8]) + "'"
+    op2 = "'" + str(df.iloc[index, 17]) + "'"
+
+    cursor.execute(f"""
+    INSERT INTO Atencion (tipoAtencion, fecha, idBeneficiario, ModPrestacion_1, Nro_OP_1 , matricula, idNomenclador, D_Prestacion,  ModPrestacion_2, Nro_OP_2, fechaPractica, cantidad, valorTotal, idEfector, convenio)
+    VALUES ('{df.loc[index, "tipoatencion"]}', '{df.loc[index, "FECHA_DE_PRESTACION"]}', {idBen[0]}, '{df.loc[index, "MODALIDAD_PRESTACION"]}', {op1}, {mat}, {idNom[0]}, '{df.loc[index, "D_PRESTACION"]}', '{df.iloc[index, 16]}', {op2}, '{df.loc[index, "F_PRACTICA"]}', {df.loc[index, "CANT."]}, {df.loc[index, "Valor Total"]}, {idEfec[0]}, '{df.loc[index, "CONVENIO"]}')""")   
+db.commit()    
+    
+#Insercion de OMES
+dfOme = pd.read_excel('BasePami.xlsx', sheet_name='Hoja5')
+
+for index, row in dfOme.iloc[1:].iterrows():
+    cursor.execute(f"""SELECT idNomenclador FROM Nomenclador WHERE codPractica = '{dfOme.iloc[index, 16]}'""")
+    nome = cursor.fetchone()
+    cursor.execute(f"""SELECT idEfector FROM Efector WHERE codPrestador = '{dfOme.iloc[index, 14]}'""")
+    hosp = cursor.fetchone()
+    nro = str(dfOme.iloc[index, 2])
+    nroset = nro[:-2] + '-' + nro[-2:]
+    cursor.execute(f"""SELECT idBeneficiario FROM Beneficiario WHERE NroBeneficiario = '{nroset}'""")
+    bene = cursor.fetchone()
+
+    if nome is None:
+        print(dfOme.iloc[index, 16])
+        print("practica no registrada!!!")
+        continue
+
+    if (hosp is None) and (bene is None):
+        cursor.execute("""
+        INSERT INTO Efector (codPrestador, RazonSocial) 
+        VALUES (%s, %s)""", (dfOme.iloc[index, 14], dfOme.iloc[index, 15]))
+        cursor.execute(f"""SELECT idEfector FROM Efector WHERE codPrestador = '{dfOme.iloc[index, 14]}'""")
+        hosp = cursor.fetchone()
+        cursor.execute("""
+        INSERT INTO Beneficiario (apeYnom, NroBeneficiario) 
+        VALUES (%s, %s)""", (dfOme.iloc[index, 3], nroset))
+        cursor.execute(f"""SELECT idBeneficiario FROM Beneficiario WHERE NroBeneficiario = '{nroset}'""")
+        bene = cursor.fetchone()
+        cursor.execute(f"""     
+        INSERT INTO ome (nroOrden, fecha, idNomenclador, idBeneficiario, turno, userAcepto, fechaacepto, transmitido, fechaTransmision, userTransmision, validacion, fechaValidacion, uservalidacion, idEfector, valor)
+        VALUES ({dfOme.iloc[index, 0]}, '{dfOme.iloc[index, 1]}', {nome[0]}, {bene[0]}, '{dfOme.iloc[index, 5]}', '{dfOme.iloc[index, 6]}', '{dfOme.iloc[index, 7]}', '{dfOme.iloc[index, 8]}', '{dfOme.iloc[index, 9]}', '{dfOme.iloc[index, 10]}', '{dfOme.iloc[index, 11]}', '{dfOme.iloc[index, 12]}', '{dfOme.iloc[index, 13]}', {hosp[0]}, {dfOme.iloc[index, 18]})""")   
+        continue
+
+    if hosp is None:
+        cursor.execute("""
+        INSERT INTO Efector (codPrestador, RazonSocial) 
+        VALUES (%s, %s)""", (dfOme.iloc[index, 14], dfOme.iloc[index, 15]))
+        cursor.execute(f"""SELECT idEfector FROM Efector WHERE codPrestador = '{dfOme.iloc[index, 14]}'""")
+        hosp = cursor.fetchone()
+        cursor.execute(f"""     
+        INSERT INTO ome (nroOrden, fecha, idNomenclador, idBeneficiario, turno, userAcepto, fechaacepto, transmitido, fechaTransmision, userTransmision, validacion, fechaValidacion, uservalidacion, idEfector, valor)
+        VALUES ({dfOme.iloc[index, 0]}, '{dfOme.iloc[index, 1]}', {nome[0]}, {bene[0]}, '{dfOme.iloc[index, 5]}', '{dfOme.iloc[index, 6]}', '{dfOme.iloc[index, 7]}', '{dfOme.iloc[index, 8]}', '{dfOme.iloc[index, 9]}', '{dfOme.iloc[index, 10]}', '{dfOme.iloc[index, 11]}', '{dfOme.iloc[index, 12]}', '{dfOme.iloc[index, 13]}', {hosp[0]}, {dfOme.iloc[index, 18]})""")   
+        continue
+
+    if bene is None:
+        cursor.execute("""
+        INSERT INTO Beneficiario (apeYnom, NroBeneficiario) 
+        VALUES (%s, %s)""", (dfOme.iloc[index, 3], nroset))
+        cursor.execute(f"""SELECT idBeneficiario FROM Beneficiario WHERE NroBeneficiario = '{nroset}'""")
+        bene = cursor.fetchone()
+        cursor.execute(f"""     
+        INSERT INTO ome (nroOrden, fecha, idNomenclador, idBeneficiario, turno, userAcepto, fechaacepto, transmitido, fechaTransmision, userTransmision, validacion, fechaValidacion, uservalidacion, idEfector, valor)
+        VALUES ({dfOme.iloc[index, 0]}, '{dfOme.iloc[index, 1]}', {nome[0]}, {bene[0]}, '{dfOme.iloc[index, 5]}', '{dfOme.iloc[index, 6]}', '{dfOme.iloc[index, 7]}', '{dfOme.iloc[index, 8]}', '{dfOme.iloc[index, 9]}', '{dfOme.iloc[index, 10]}', '{dfOme.iloc[index, 11]}', '{dfOme.iloc[index, 12]}', '{dfOme.iloc[index, 13]}', {hosp[0]}, {dfOme.iloc[index, 18]})""")   
+        continue
+
+    cursor.execute(f"""     
+        INSERT INTO ome (nroOrden, fecha, idNomenclador, idBeneficiario, turno, userAcepto, fechaacepto, transmitido, fechaTransmision, userTransmision, validacion, fechaValidacion, uservalidacion, idEfector, valor)
+        VALUES ({dfOme.iloc[index, 0]}, '{dfOme.iloc[index, 1]}', {nome[0]}, {bene[0]}, '{dfOme.iloc[index, 5]}', '{dfOme.iloc[index, 6]}', '{dfOme.iloc[index, 7]}', '{dfOme.iloc[index, 8]}', '{dfOme.iloc[index, 9]}', '{dfOme.iloc[index, 10]}', '{dfOme.iloc[index, 11]}', '{dfOme.iloc[index, 12]}', '{dfOme.iloc[index, 13]}', {hosp[0]}, {dfOme.iloc[index, 18]})""")   
+db.commit()
