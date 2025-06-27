@@ -2,9 +2,18 @@
 
   /* Estilo de la imagen de perfil */
   .Profile_image {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
+    width: 400px;
+    height: 400px;
+    border-radius: 70%;
     margin-bottom: 20px;
   }
   
+
+  .Profile_image {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .Profile_image.hidden {
+    opacity: 0;
+    transform: scale(0);
+  }

@@ -3,19 +3,32 @@ import BasicLayout from './components/layout';
 import Dashboard from './components/dashboard';
 import Login from './components/login';
 import Home from './components/home'
-import Auditoria from './components/auditoria'
-import TablaConFiltro from './components/tabla';
-
+import DashboardAuditor from './components/dashboardAuditor';
+import VistaRegistros from './components/vistaRegistros';
+import RegisterForm from './components/registrarUsuario';
+import Usuarios from './components/usuarios';
+import AsignarHospitales from './components/AsignarUserHosp';
+import AuditoriasList from './components/listaAuditorias';
+import ResultadosBusqueda from './components/ResultadosBusquedas';
+import Perfil from './components/perfil';
 
 const App = () => {
   return (
     <Routes>
+      <Route path='login' element={<Login/>} />
       <Route path="/" element={<BasicLayout />}>
-        <Route index element={<TablaConFiltro />} />
-        <Route path='home' element={<Home />} />
+        <Route path="registros/:tipo" element={<VistaRegistros />} />
+        <Route index element={<Dashboard />} />
+        <Route path='register' element={<RegisterForm />} />
         <Route path='dashboard' element={<Dashboard />} />
-        <Route path='auditorias' element={<Auditoria />} />
-        {/* Puedes añadir más rutas aquí en el futuro */}
+        <Route path='dashboardAuditor' element={<DashboardAuditor />} />
+        <Route path='usuarios' element={<Usuarios />} />
+        <Route path='auditorias' element={<AuditoriasList />} />
+        <Route path='auditorias/:id' element={<VistaRegistros editarAuditoria={true} />} />
+        <Route path='asignaciones' element={<AsignarHospitales/>} />
+        <Route path="/busqueda" element={<ResultadosBusqueda />} />
+        <Route path="/perfil" element={<Perfil />} />
+        
       </Route>
     </Routes>
   );

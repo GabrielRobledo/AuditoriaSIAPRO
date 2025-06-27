@@ -1,22 +1,45 @@
-const loginModels = require ('../models/loginModels');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const Usuario = require('../models/altaUserModels');
 
-const Login = (req, res) => {
-  const { user, pass } = req.body;
+const login = (req, res) => {
+  const { usuario, contraseña } = req.body;
 
-  loginModels.usuarioEmail(user, async (err, userFromDB) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (!userFromDB || !userFromDB.contraseña) {
-      return res.status(401).json({ message: 'El usuario no existe o no tiene contraseña.' });
+  Usuario.getUserByUsername(usuario, (err, user) => {
+    if (err) {
+      console.error('Error al buscar usuario:', err);
+      return res.status(500).json({ msg: 'Error del servidor' });
     }
 
-    const isMatch = await bcrypt.compare(pass, userFromDB.contraseña);
-    if (!isMatch) return res.status(401).json({ message: 'Contraseña incorrecta!!' });
+    if (!user) {
+      console.log('Usuario no encontrado');
+      return res.status(401).json({ msg: 'Usuario no encontrado' });
+    }
 
-    const token = jwt.sign({ id: userFromDB.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token });
+    console.log('Usuario recuperado:', user);
+
+    bcrypt.compare(contraseña, user['contraseña'], (err, isMatch) => {
+      if (err) {
+        console.error('Error al comparar contraseñas:', err);
+        return res.status(500).json({ msg: 'Error al verificar credenciales' });
+      }
+
+      if (!isMatch) {
+        return res.status(401).json({ msg: 'Credenciales inválidas' });
+      }
+
+      const token = jwt.sign({
+        idUsuario: user.idUsuario,
+        nombre: user.nombre,
+        usuario: user.usuario,
+        idTipoUsuario: user.idTipoUsuario
+      }, 'tu_secreto_jwt', { expiresIn: '2h' });
+
+      res.json({ msg: 'Login exitoso', token, user });
+    });
   });
 };
 
-module.exports = {Login};
+module.exports = {
+  login
+};

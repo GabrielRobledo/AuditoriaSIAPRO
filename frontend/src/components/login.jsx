@@ -1,42 +1,68 @@
 import { useState } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
+import '../styles/login.css';
 
-export default function Login() {
-  const [user, setUser] = useState('');
-  const [pass, setPass] = useState('');
+function Login() {
+  const [usuario, setUsuario] = useState('');
+  const [contraseña, setContraseña] = useState('');
 
-  const onSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('http://localhost:3000/api/login', {
-        user,
-        pass
+      const res = await axios.post('http://localhost:3000/api/login', { usuario, contraseña });
+      localStorage.setItem('token', res.data.token);
+
+      Swal.fire({
+        title: '¡Login exitoso!',
+        text: 'Has iniciado sesión correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Continuar'
       });
 
-      localStorage.setItem('token', response.data.token);
-      alert('Login exitoso');
+      console.log('Login exitoso');
     } catch (err) {
-      console.error(err);
-      alert('Login fallido');
+      console.log('Error en login:', err);
+
+      let mensajeError = 'Error inesperado. Intenta de nuevo.';
+      if (err.response && err.response.data && err.response.data.message) {
+        mensajeError = err.response.data.message;
+      } else if (err.message) {
+        mensajeError = err.message;
+      }
+
+      Swal.fire({
+        title: 'Error de login',
+        text: mensajeError,
+        icon: 'error',
+        confirmButtonText: 'Intentar nuevamente'
+      });
     }
   };
 
   return (
-    <form onSubmit={onSubmit}>
-      <input
-        type="email"
-        placeholder="Correo electrónico"
-        value={user}
-        onChange={e => setUser(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={pass}
-        onChange={e => setPass(e.target.value)}
-      />
-      <button type="submit">Iniciar sesión</button>
-    </form>
+    <div className="container">
+      <form className="form" onSubmit={handleLogin}>
+        <h3>Iniciar Sesión</h3>
+        <input
+          type="text"
+          placeholder="Usuario"
+          value={usuario}
+          onChange={e => setUsuario(e.target.value)}
+          className="input"
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={contraseña}
+          onChange={e => setContraseña(e.target.value)}
+          className="input"
+        />
+        <button type="submit" className="button">Entrar</button>
+      </form>
+    </div>
   );
 }
+
+export default Login;

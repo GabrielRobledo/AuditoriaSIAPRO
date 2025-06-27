@@ -4,6 +4,9 @@
   overflow-x: auto;
   padding: 20px;
   box-sizing: border-box;
+  max-height: 1000px; /* o el alto que quieras */
+  overflow-y: auto;
+  border: 1px solid #ccc;
 }
 
 .tabla {
@@ -66,4 +69,19 @@
     text-align: left;
     font-weight: bold;
   }
+
+  .column-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.tabla thead th {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 2;
+}
+
 }

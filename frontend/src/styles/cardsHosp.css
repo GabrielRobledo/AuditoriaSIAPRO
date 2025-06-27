@@ -1,0 +1,51 @@
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 1rem;
+  transition: box-shadow 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.card-icon {
+  font-size: 1.8rem;
+  margin-right: 0.5rem;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  color: #007bff;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.card-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.card-list li {
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+}
