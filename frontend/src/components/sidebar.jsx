@@ -1,7 +1,7 @@
 import {Menu} from 'antd';
 import { Link } from 'react-router-dom';
 import {HomeOutlined, DatabaseOutlined, BarsOutlined, DashboardOutlined} from '@ant-design/icons';
-//import '../styles/navbar.css'
+import '../styles/navbar.css'
 
 const sidebar = ({ onSeleccion }) => {
   return (

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { FiClipboard, FiDollarSign } from 'react-icons/fi';
-import {FaHospital, FaTasks} from 'react-icons/fa';
+import { FaHospital, FaTasks } from 'react-icons/fa';
 
 export default function DashboardAuditor() {
   const [auditorias, setAuditorias] = useState([]);
@@ -10,23 +10,22 @@ export default function DashboardAuditor() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Obtener auditorías cerradas
     fetch('http://localhost:3000/api/auditorias')
       .then(res => res.json())
       .then(setAuditorias)
       .catch(err => Swal.fire('Error', err.message, 'error'));
 
-    // Obtener atenciones pendientes de auditar
     fetch('http://localhost:3000/api/atenciones')
       .then(res => res.json())
       .then(setAtenciones)
       .catch(err => Swal.fire('Error', err.message, 'error'));
   }, []);
 
-  // Cálculos derivados
   const totalDebito = auditorias.reduce((acc, a) => acc + (parseFloat(a.totalDebito) || 0), 0);
-  const auditoriasRecientes = auditorias.slice(0, 5);
-
+  const auditoriasRecientes = auditorias
+  .slice() // para no mutar el estado original
+  .sort((a, b) => b.idAuditoria - a.idAuditoria)
+  .slice(0, 5);
   const hospitalesPendientes = new Set(atenciones.map(a => a.idEfector)).size;
 
   const atencionesPorTipo = atenciones.reduce((acc, a) => {
@@ -36,11 +35,7 @@ export default function DashboardAuditor() {
 
   return (
     <div style={containerStyle}>
-      
-
-      {/* === Bloques de Estadísticas === */}
       <div style={dashboardRow}>
-        {/* Bloque Auditorías Cerradas */}
         <div style={cardBlock}>
           <h2 style={sectionTitle}>Auditorías Cerradas</h2>
           <div style={cardsContainer}>
@@ -58,7 +53,6 @@ export default function DashboardAuditor() {
           </div>
         </div>
 
-        {/* Bloque Atenciones Pendientes */}
         <div style={cardBlock}>
           <h2 style={sectionTitle}>Atenciones Pendientes</h2>
           <div style={cardsContainer}>
@@ -81,28 +75,48 @@ export default function DashboardAuditor() {
         </div>
       </div>
 
-      {/* === Tabla de Auditorías Recientes === */}
+      {/* === Tabla mejorada === */}
       <h2 style={{ marginTop: '40px' }}>Últimas Auditorías Cerradas</h2>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Hospital</th>
-            <th>Periodo</th>
-            <th>Total Débito</th>
-          </tr>
-        </thead>
-        <tbody>
-          {auditoriasRecientes.map(a => (
-            <tr key={a.idAuditoria}>
-              <td>{a.idAuditoria}</td>
-              <td>{a.Hospital}</td>
-              <td>{a.periodo}</td>
-              <td>${a.totalDebito}</td>
+      <div style={{
+        overflowX: 'auto',
+        borderRadius: '10px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        backgroundColor: '#fff',
+        marginTop: '10px'
+      }}>
+        <table style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          minWidth: '600px'
+        }}>
+          <thead>
+            <tr>
+              <th style={thStyle}>ID</th>
+              <th style={thStyle}>Hospital</th>
+              <th style={thStyle}>Periodo</th>
+              <th style={thStyle}>Total Débito</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {auditoriasRecientes.map((a, idx) => (
+              <tr
+                key={a.idAuditoria}
+                style={{
+                  backgroundColor: idx % 2 === 0 ? '#f5f5f5' : '#fff',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e3f2fd')}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#f5f5f5' : '#fff')}
+              >
+                <td style={tdStyle}>{a.idAuditoria}</td>
+                <td style={tdStyle}>{a.Hospital}</td>
+                <td style={tdStyle}>{a.periodo}</td>
+                <td style={tdStyle}>${parseFloat(a.totalDebito).toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <button
         onClick={() => navigate('/auditorias')}
@@ -114,7 +128,7 @@ export default function DashboardAuditor() {
   );
 }
 
-// === Estilos ===
+// === Estilos inline ===
 
 const containerStyle = {
   padding: '40px',
@@ -173,14 +187,16 @@ const valueStyle = {
   margin: '10px 0 0'
 };
 
-const tableStyle = {
-  width: '100%',
-  marginTop: '20px',
-  borderCollapse: 'collapse',
-  backgroundColor: '#fff',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-  borderRadius: '8px',
-  overflow: 'hidden'
+const thStyle = {
+  backgroundColor: '#1976d2',
+  color: '#fff',
+  textAlign: 'left',
+  padding: '12px 16px'
+};
+
+const tdStyle = {
+  padding: '12px 16px',
+  borderBottom: '1px solid #e0e0e0'
 };
 
 const buttonStyle = {

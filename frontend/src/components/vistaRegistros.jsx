@@ -12,7 +12,6 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
   const [datos, setDatos] = useState([]);
   const [hospitales, setHospitales] = useState([]);
 
-  // 🔄 Traer listado de hospitales (efectores)
   useEffect(() => {
     fetch('http://localhost:3000/api/efectores')
       .then(res => {
@@ -22,11 +21,10 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
       .then(json => setHospitales(json))
       .catch(err => {
         console.error('Error cargando hospitales:', err);
-        setHospitales([]); // fallback vacío para evitar más errores
+        setHospitales([]);
       });
   }, []);
 
-  // 🔁 Si está en modo edición de auditoría, traemos auditoría por ID
   useEffect(() => {
     if (editarAuditoria) {
       fetch(`http://localhost:3000/api/auditorias/${id}`)
@@ -67,7 +65,6 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
     }
   }, [tipo, editarAuditoria, id]);
 
-  // 🔍 Filtro por hospital
   const datosFiltrados = useMemo(() => {
     if (tipo === 'atenciones' && hospitalFiltro) {
       return datos.filter(d =>
@@ -78,7 +75,6 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
     return datos;
   }, [datos, tipo, hospitalFiltro]);
 
-  // 🏥 Mostrar nombre del hospital
   const nombreHospital = useMemo(() => {
     if (!hospitalFiltro || hospitales.length === 0) return null;
     const h = hospitales.find(hosp =>
@@ -87,24 +83,21 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
     return h?.RazonSocial || null;
   }, [hospitalFiltro, hospitales]);
 
-  // 🖥️ Si es vista general de atenciones sin filtro
   if (!editarAuditoria && tipo === 'atenciones' && !hospitalFiltro) {
     return (
       <div>
-        <h2>Resumen de Atenciones por Hospital</h2>
+        <h2>Hospitales para auditar</h2>
         <ListadoHospitales atenciones={datos} />
       </div>
     );
   }
 
-  // 📋 Vista principal de registros (listado o edición)
   return (
     <div>
       <h2>
         {editarAuditoria
           ? 'Editar Auditoría'
-          : `Listado de ${tipo?.charAt(0).toUpperCase() + tipo?.slice(1)}`
-        }
+          : `Listado de ${tipo?.charAt(0).toUpperCase() + tipo?.slice(1)}`}
         {hospitalFiltro && nombreHospital && ` - Hospital: ${nombreHospital}`}
       </h2>
 

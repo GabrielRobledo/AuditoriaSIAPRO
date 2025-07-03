@@ -1,3 +1,5 @@
+const db = require('../db/conexion')
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Usuario = require('../models/altaUserModels');
@@ -38,12 +40,12 @@ const register = (req, res) => {
 };
 
 const getAllUsers = (req, res) => {
-  Usuario.getAllUsers((err, results) => {
+  const mostrarEliminados = req.query.eliminados === 'true';
+
+  Usuario.getAllUsers(mostrarEliminados, (err, results) => {
     if (err) {
       console.error('Error al obtener usuarios:', err);
-      console.log("Usuario encontrado:", user);
       return res.status(500).json({ msg: 'Error al obtener usuarios' });
-      
     }
     res.json(results);
   });
@@ -51,11 +53,32 @@ const getAllUsers = (req, res) => {
 
 const deleteUser = (req, res) => {
   const id = req.params.id;
-  Usuario.deleteUser(id, (err, result) => {
-    if (err) return res.status(500).json({ msg: 'Error al eliminar usuario' });
-    res.json({ msg: 'Usuario eliminado correctamente' });
+
+  // Verificar si tiene efectores asignados
+  const checkAssignments = 'SELECT COUNT(*) AS cantidad FROM auditor_efector WHERE idUsuario = ?';
+  db.query(checkAssignments, [id], (err, result) => {
+    if (err) {
+      console.error('Error al verificar asignaciones:', err);
+      return res.status(500).json({ msg: 'Error al verificar asignaciones' });
+    }
+
+
+    const cantidad = result[0].cantidad;
+    if (cantidad > 0) {
+      return res.status(400).json({ msg: 'El usuario tiene hospitales asignados' });
+    }
+
+    // Si no tiene hospitales asignados, se elimina lógicamente
+    Usuario.deleteUser(id, (err, result) => {
+      if (err) {
+        console.error('Error al eliminar usuario:', err);
+        return res.status(500).json({ msg: 'Error al eliminar usuario' });
+      }
+      res.json({ msg: 'Usuario eliminado correctamente' });
+    });
   });
 };
+
 
 const updateUser = (req, res) => {
   const id = req.params.id;
@@ -114,4 +137,19 @@ const login = (req, res) => {
   });
 };
 
-module.exports = { register, getAllUsers, deleteUser, updateUser, login };
+const restoreUser = (req, res) => {
+  const id = req.params.id;
+  Usuario.restoreUser(id, (err, result) => {
+    if (err) return res.status(500).json({ msg: 'Error al restaurar usuario' });
+    res.json({ msg: 'Usuario restaurado correctamente' });
+  });
+};
+
+module.exports = {
+  register,
+  getAllUsers,
+  deleteUser,
+  updateUser,
+  login,
+  restoreUser
+};

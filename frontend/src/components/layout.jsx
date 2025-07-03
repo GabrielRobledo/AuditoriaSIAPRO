@@ -1,7 +1,8 @@
 import { Layout, Button, theme, Input, Tooltip, Grid, Avatar, Dropdown, Menu } from 'antd';
 import { useState } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './sidebar';
+import '../styles/navbar.css';
 import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -60,25 +61,24 @@ const BasicLayout = () => {
         collapsed={collapsed}
         onCollapse={value => setCollapsed(value)}
       >
-        <div className="Profile_info" style={{ textAlign: 'center' }}>
-          {!collapsed && (
+     <div className="Profile_info">
+        {!collapsed && (
+          <div className="profile-container">
             <img
-              src="logo1.png"
+              src="/logo1.png"
               alt="Profile"
               className={`Profile_image ${collapsed ? 'hidden' : ''}`}
-              style={{
-                width: '100px',
-                height: '100px',
-                marginTop: '20px',
-                borderRadius: '50%',
-                objectFit: 'cover',
-                transition: 'opacity 0.3s, transform 0.3s',
-                opacity: collapsed ? 0 : 1,
-                transform: collapsed ? 'scale(0)' : 'scale(1)',
-              }}
             />
-          )}
-        </div>
+            <div className="profile-text">
+              <h2 className="profile-brand">Audit RGA</h2>
+              <p className="profile-slogan">Tu auditoría de confianza</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+
+
         <Sidebar onSeleccion={setTablaSeleccionada} />
       </Sider>
 

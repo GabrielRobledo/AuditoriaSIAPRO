@@ -20,10 +20,10 @@ exports.crearAuditoria = (req, res) => {
         });
 
         const idAuditoria = result.insertId;
-        const inserts = detalles.map((d) => [d.idAtencion, idAuditoria, d.debito]);
+        const inserts = detalles.map((d) => [d.idAtencion, idAuditoria, d.idMotivo || null, d.debito]);
 
         db.query(
-          'INSERT INTO `detalle-auditoria` (idAtencion, idAuditoria, importe) VALUES ?',
+          'INSERT INTO `detalle-auditoria` (idAtencion, idAuditoria, idMotivo, importe) VALUES ?',
           [inserts],
           (err) => {
             if (err) return db.rollback(() => {
@@ -48,11 +48,13 @@ exports.crearAuditoria = (req, res) => {
 
 exports.listarAuditorias = (req, res) => {
   db.query(`
-    SELECT a.idAuditoria, e.RazonSocial, a.periodo, a.idUsuario, a.idEfector, a.totalDebito,
-           da.idAtencion, da.importe AS debito
+    SELECT 
+      a.idAuditoria, e.RazonSocial, a.periodo, a.idUsuario, a.idEfector, a.totalDebito,
+      da.idAtencion, da.importe AS debito, at.valorTotal
     FROM auditoria as a
-     join \`detalle-auditoria\` as da on a.idAuditoria = da.idAuditoria 
-    join efectores as e on e.idEfector = a.idEfector 
+    JOIN \`detalle-auditoria\` as da ON a.idAuditoria = da.idAuditoria 
+    JOIN efectores as e ON e.idEfector = a.idEfector 
+    JOIN atenciones as at ON da.idAtencion = at.idAtencion
     ORDER BY a.idAuditoria DESC;
   `, (err, rows) => {
     if (err) return res.status(500).json({ error: 'Error al listar auditorías' });
@@ -66,19 +68,23 @@ exports.listarAuditorias = (req, res) => {
           idUsuario: r.idUsuario,
           idEfector: r.idEfector,
           totalDebito: r.totalDebito,
+          totalFacturado: 0, 
           detalles: []
         };
       }
       acc[r.idAuditoria].detalles.push({
         idAtencion: r.idAtencion,
-        debito: r.debito
+        debito: r.debito,
+        valorTotal: r.valorTotal
       });
+      acc[r.idAuditoria].totalFacturado += parseFloat(r.valorTotal || 0);
       return acc;
     }, {});
 
     res.json(Object.values(result));
   });
 };
+
 
 exports.obtenerAuditoria = (req, res) => {
   const { id } = req.params;
@@ -87,7 +93,7 @@ exports.obtenerAuditoria = (req, res) => {
     `
     SELECT 
       a.idAuditoria, a.periodo, a.idUsuario, a.idEfector, a.totalDebito,
-      da.idAtencion, da.importe AS debito,
+      da.idAtencion, da.importe AS debito, da.idMotivo,
 
       at.tipoAtencion, at.fecha, 
       b.apeYnom, 
@@ -133,6 +139,7 @@ exports.obtenerAuditoria = (req, res) => {
           valorTotal: parseFloat(r.valorTotal),
           moduloDescripcion: r.moduloDescripcion,
           hospital: r.hospital,
+          idMotivo: r.idMotivo || null,
           debito: parseFloat(r.debito)
         }))
       };
@@ -142,7 +149,7 @@ exports.obtenerAuditoria = (req, res) => {
   );
 };
 
-// Función para editar auditoría (solo mostraste fragmento pero incluyo por contexto)
+
 exports.editarAuditoria = (req, res) => {
   const { id } = req.params;
   const { periodo, totalDebito, detalles } = req.body;
@@ -162,11 +169,12 @@ exports.editarAuditoria = (req, res) => {
           const valores = detalles.map(d => [
             id,
             d.idAtencion,
-            d.debito
+            d.idMotivo || null, 
+            d.debito,
           ]);
 
           db.query(
-            'INSERT INTO `detalle-auditoria` (idAuditoria, idAtencion, importe) VALUES ?',
+            'INSERT INTO `detalle-auditoria` (idAuditoria, idAtencion, idMotivo, importe) VALUES ?',
             [valores],
             err => {
               if (err) return db.rollback(() => res.status(500).json({ error: 'Error al insertar nuevos detalles' }));

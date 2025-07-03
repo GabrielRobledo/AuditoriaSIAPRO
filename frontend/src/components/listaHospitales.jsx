@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import {FaHospital, FaTasks} from 'react-icons/fa';
 import '../styles/cardsHosp.css';
 
 const ListadoHospitales = ({ atenciones }) => {
@@ -44,7 +45,9 @@ const ListadoHospitales = ({ atenciones }) => {
           onClick={() => handleClickHospital(idEfector)}
         >
           <div className="card-header">
-            <LocalHospitalIcon style={{ color: '#d32f2f', marginRight: '0.5rem' }} />
+            <div className="card-icon">
+              <LocalHospitalIcon />
+            </div>
             <h3 className="card-title">{hospital}</h3>
           </div>
           <ul className="card-list">

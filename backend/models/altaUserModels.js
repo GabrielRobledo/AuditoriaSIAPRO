@@ -6,30 +6,51 @@ const createUser = (nombre, usuario, contraseña, idTipoUsuario, callback) => {
 };
 
 const getUserByUsername = (usuario, callback) => {
-  const sql = 'SELECT * FROM usuarios WHERE usuario = ?';
+  const sql = 'SELECT * FROM usuarios WHERE usuario = ? AND delete_add IS NULL';
   db.query(sql, [usuario], (err, results) => {
     if (err) return callback(err);
-    callback(null, results[0]); // ✅ esto estaba faltando
+    callback(null, results[0]);
   });
 };
 
 const updateUser = (id, nombre, usuario, idTipoUsuario, callback) => {
-  const sql = 'UPDATE usuarios SET nombre = ?, usuario = ?, idTipoUsuario = ? WHERE idUsuario = ?';
+  const sql = 'UPDATE usuarios SET nombre = ?, usuario = ?, idTipoUsuario = ? WHERE idUsuario = ? AND delete_add IS NULL';
   db.query(sql, [nombre, usuario, idTipoUsuario, id], callback);
 };
 
+// ⚠️ Eliminación lógica
 const deleteUser = (id, callback) => {
-  const sql = 'DELETE FROM usuarios WHERE idUsuario = ?';
+  const sql = 'UPDATE usuarios SET delete_add = CURRENT_TIMESTAMP WHERE idUsuario = ?';
   db.query(sql, [id], callback);
 };
 
-const getAllUsers = (callback) => {
-  const sql = `
-    SELECT u.idUsuario, u.nombre, u.usuario, t.tipo AS tipoUsuario
+const getAllUsers = (mostrarEliminados = false, callback) => {
+  let sql = `
+    SELECT u.idUsuario, u.nombre, u.usuario, u.delete_add, t.tipo AS tipoUsuario
     FROM usuarios u
     JOIN tipousuarios t ON u.idTipoUsuario = t.idTipoUsuario
   `;
+  
+  if (!mostrarEliminados) {
+    sql += ' WHERE u.delete_add IS NULL';
+  }
+
   db.query(sql, callback);
 };
 
-module.exports = { createUser, getUserByUsername, getAllUsers, updateUser, deleteUser };
+
+const restoreUser = (id, callback) => {
+  const sql = 'UPDATE usuarios SET delete_add = NULL WHERE idUsuario = ?';
+  db.query(sql, [id], callback);
+};
+
+module.exports = {
+  createUser,
+  getUserByUsername,
+  getAllUsers,
+  updateUser,
+  deleteUser,
+  restoreUser 
+};
+
+

@@ -1,51 +1,133 @@
+/* Contenedor de las tarjetas */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
 }
 
+/* Tarjeta individual */
 .card {
   background-color: #fff;
-  border: 1px solid #ddd;
   border-radius: 12px;
-  padding: 1rem;
-  transition: box-shadow 0.3s ease;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  max-height: 380px;
+  overflow: hidden;
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Cabecera de la tarjeta */
 .card-header {
   display: flex;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  color: #333;
 }
 
 .card-icon {
-  font-size: 1.8rem;
-  margin-right: 0.5rem;
+  font-size: 2rem;
+  color: #007bff;
+  margin-right: 0.75rem;
 }
 
 .card-title {
-  font-size: 1.2rem;
-  color: #007bff;
-  margin: 0;
+  font-size: 1.4rem;
+  color: #333;
+  font-weight: 600;
   flex-grow: 1;
+  margin: 0;
 }
 
+/* Lista dentro de la tarjeta */
 .card-list {
   list-style: none;
   padding-left: 0;
   margin: 0;
+  color: #666;
+  font-size: 1rem;
 }
 
 .card-list li {
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.6rem;
   font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Hover en las listas para mejorar la interacción */
+.card-list li:hover {
+  color: #0056b3;
+  cursor: pointer;
+}
+
+/* Diseño del contenedor general */
+h2 {
+  font-size: 1.8rem;
+  color: #343a40;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+h2 span {
+  font-size: 1.2rem;
+  font-weight: normal;
+  color: #007bff;
+}
+
+/* Estilo de tabla */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2rem;
+}
+
+.table th,
+.table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.table th {
+  background-color: #007bff;
+  color: white;
+}
+
+.table td {
+  color: #555;
+}
+
+.table tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Estilo general de botones */
+button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }

@@ -4,20 +4,21 @@ import Swal from 'sweetalert2';
 import {
   Container,
   Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Autocomplete,
+  TextField,
   Grid,
-  Paper,
+  Card,
+  CardHeader,
+  CardContent,
   List,
-  ListItem,
   ListItemText,
+  ListItemButton,
   IconButton,
   Button,
   Tabs,
   Tab,
-  Box
+  Box,
+  Badge
 } from '@mui/material';
 import { ArrowForward, ArrowBack, Delete as DeleteIcon } from '@mui/icons-material';
 
@@ -25,7 +26,7 @@ const AsignarHospitales = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [efectores, setEfectores] = useState([]);
   const [asignacionesTotales, setAsignacionesTotales] = useState([]);
-  const [auditorId, setAuditorId] = useState('');
+  const [auditorId, setAuditorId] = useState(null);
   const [asignados, setAsignados] = useState([]);
   const [disponibles, setDisponibles] = useState([]);
   const [tabIndex, setTabIndex] = useState(0);
@@ -50,8 +51,7 @@ const AsignarHospitales = () => {
       setEfectores(efectoresData.filter(e => !efectoresAsignados.has(e.idEfector)));
       setDisponibles(efectoresData.filter(e => !efectoresAsignados.has(e.idEfector)));
 
-      const asignacionesAgrupadas = usuariosData
-        .filter(u => u.tipoUsuario === 'auditor')
+      const asignacionesAgrupadas = auditores
         .map(auditor => {
           const hospitales = asignacionesData
             .filter(a => a.idUsuario === auditor.idUsuario)
@@ -134,7 +134,7 @@ const AsignarHospitales = () => {
           timer: 2000,
           showConfirmButton: false,
         });
-        setAuditorId('');
+        setAuditorId(null);
         setAsignados([]);
         fetchData();
       })
@@ -162,7 +162,7 @@ const AsignarHospitales = () => {
           .then(() => {
             Swal.fire('Eliminado', 'Las asignaciones fueron eliminadas.', 'success');
             fetchData();
-            setAuditorId('');
+            setAuditorId(null);
             setAsignados([]);
           })
           .catch(() => {
@@ -173,120 +173,186 @@ const AsignarHospitales = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 5 }}>
-      <Typography variant="h4" gutterBottom>
+    <Container maxWidth="md" sx={{ mt: 5, mb: 5 }}>
+      <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
         Gestión de Asignaciones
       </Typography>
 
-      <Tabs value={tabIndex} onChange={(_, newIndex) => setTabIndex(newIndex)} sx={{ mb: 3 }}>
+      <Tabs
+        value={tabIndex}
+        onChange={(_, newIndex) => setTabIndex(newIndex)}
+        indicatorColor="primary"
+        textColor="primary"
+        variant="fullWidth"
+        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+      >
         <Tab label="Asignar Hospitales" />
         <Tab label="Ver Asignaciones" />
       </Tabs>
 
       {tabIndex === 0 && (
         <>
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>Auditor</InputLabel>
-            <Select
-              value={auditorId}
-              label="Auditor"
-              onChange={(e) => setAuditorId(e.target.value)}
-            >
-              {usuarios.map((u) => (
-                <MenuItem key={u.idUsuario} value={u.idUsuario}>
-                  {u.nombre}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            options={usuarios}
+            getOptionLabel={(option) => option.nombre}
+            value={usuarios.find(u => u.idUsuario === auditorId) || null}
+            onChange={(_, newValue) => setAuditorId(newValue ? newValue.idUsuario : null)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Seleccionar Auditor"
+                variant="outlined"
+                sx={{ mb: 4 }}
+              />
+            )}
+            clearOnEscape
+          />
 
           {auditorId && (
-            <Grid container spacing={2}>
-              <Grid item xs={5}>
-                <Typography variant="h6">Hospitales disponibles</Typography>
-                <Paper elevation={3} sx={{ maxHeight: 300, overflow: 'auto' }}>
-                  <List dense>
-                    {disponibles.map(e => (
-                      <ListItem
-                        key={e.idEfector}
-                        secondaryAction={
-                          <IconButton edge="end" onClick={() => asignar(e.idEfector)}>
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Grid item xs={12} sm={6}>
+                <Card elevation={6}>
+                  <CardHeader
+                    title="Hospitales disponibles"
+                    sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}
+                    titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
+                    action={<Badge badgeContent={disponibles.length} color="secondary" />}
+                  />
+                  <CardContent sx={{ maxHeight: 480, overflowY: 'auto', p: 0 }}>
+                    <List dense>
+                      {disponibles.map(e => (
+                        <ListItemButton
+                          key={e.idEfector}
+                          onClick={() => asignar(e.idEfector)}
+                          sx={{
+                            px: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            flexWrap: 'nowrap',
+                            gap: 1,
+                            '&:hover': {
+                              bgcolor: 'primary.light',
+                              color: 'white',
+                            },
+                          }}
+                        >
+                          <ListItemText
+                            primary={e.RazonSocial}
+                            sx={{
+                              flexGrow: 1,
+                              overflow: 'hidden',
+                              whiteSpace: 'normal',
+                              wordBreak: 'break-word',
+                            }}
+                          />
+                          <Box sx={{ flexShrink: 0 }}>
                             <ArrowForward />
-                          </IconButton>
-                        }
-                      >
-                        <ListItemText primary={e.RazonSocial} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Paper>
+                          </Box>
+                        </ListItemButton>
+
+
+                      ))}
+                    </List>
+                  </CardContent>
+                </Card>
               </Grid>
 
-              <Grid item xs={2} />
-
-              <Grid item xs={5}>
-                <Typography variant="h6">Hospitales asignados</Typography>
-                <Paper elevation={3} sx={{ maxHeight: 300, overflow: 'auto' }}>
-                  <List dense>
-                    {asignados.map(e => (
-                      <ListItem
+              <Grid item xs={12} sm={6}>
+                <Card elevation={6}>
+                  <CardHeader
+                    title="Hospitales asignados"
+                    sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}
+                    titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
+                    action={<Badge badgeContent={asignados.length} color="secondary" />}
+                  />
+                  <CardContent sx={{ maxHeight: 480, overflowY: 'auto', p: 0 }}>
+                    <List dense>
+                      {asignados.map(e => (
+                      <ListItemButton
                         key={e.idEfector}
-                        secondaryAction={
-                          <IconButton edge="end" onClick={() => quitar(e.idEfector)}>
-                            <ArrowBack />
-                          </IconButton>
-                        }
+                        onClick={() => quitar(e.idEfector)}
+                        sx={{
+                          px: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'nowrap',
+                          gap: 1,
+                          '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'white',
+                          },
+                        }}
                       >
-                        <ListItemText primary={e.RazonSocial} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Paper>
+                        <ListItemText
+                          primary={e.RazonSocial}
+                          sx={{
+                            flexGrow: 1,
+                            overflow: 'hidden',
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                          }}
+                        />
+                        <Box sx={{ flexShrink: 0 }}>
+                          <ArrowBack />
+                        </Box>
+                      </ListItemButton>
+
+
+                      ))}
+                    </List>
+                  </CardContent>
+                </Card>
               </Grid>
             </Grid>
           )}
 
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            sx={{ mt: 4 }}
-          >
-            Guardar Asignación
-          </Button>
+          <Box textAlign="center">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+              sx={{ mt: 2, minWidth: 180, fontWeight: 'bold' }}
+            >
+              Guardar Asignación
+            </Button>
+          </Box>
         </>
       )}
 
       {tabIndex === 1 && (
-        <Container sx={{ mt: 2 }}>
-          <Typography variant="h5" gutterBottom>
-            Asignaciones Existentes
-          </Typography>
-          <Paper elevation={3}>
+        <Card elevation={6} sx={{ mt: 2 }}>
+          <CardHeader
+            title="Asignaciones Existentes"
+            sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}
+            titleTypographyProps={{ variant: 'h5', fontWeight: 'bold' }}
+          />
+          <CardContent sx={{ p: 0 }}>
             <List>
               {asignacionesTotales.map((a, i) => (
-                <ListItem
+                <ListItemButton
                   key={i}
                   divider
-                  secondaryAction={
-                    <IconButton
-                      edge="end"
-                      color="error"
-                      onClick={() => eliminarAsignacion(a.idUsuario)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  }
+                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                 >
                   <ListItemText
                     primary={a.nombre}
                     secondary={`Hospitales: ${a.hospitales.join(', ')}`}
+                    sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
                   />
-                </ListItem>
+                  <IconButton
+                    edge="end"
+                    color="error"
+                    onClick={() => eliminarAsignacion(a.idUsuario)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemButton>
               ))}
             </List>
-          </Paper>
-        </Container>
+          </CardContent>
+        </Card>
       )}
     </Container>
   );
