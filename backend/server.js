@@ -9,6 +9,7 @@ const auditoriasRoutes = require('./routes/auditoriasRoutes')
 const asignacionRoutes = require('./routes/asignacionesRoutes');
 const auditoriaProgresoRoutes = require('./routes/auditoriasProgresoRoutes');
 const motivosRoutes = require('./routes/motivosRoutes');
+const motivosTotalesRoutes = require('./routes/motivosTotalesRoutes');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -31,6 +32,7 @@ app.use('/api', auditoriasRoutes);
 app.use('/api', asignacionRoutes);
 app.use('/api', auditoriaProgresoRoutes);
 app.use('/api', motivosRoutes);
+app.use('/api', motivosTotalesRoutes);
 
 
 // Servidor

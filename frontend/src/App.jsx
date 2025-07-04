@@ -11,6 +11,7 @@ import AsignarHospitales from './components/AsignarUserHosp';
 import AuditoriasList from './components/listaAuditorias';
 import ResultadosBusqueda from './components/ResultadosBusquedas';
 import Perfil from './components/perfil';
+import AuditoriaDetalle from './components/auditoriaDetallePDF';
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
         <Route path='asignaciones' element={<AsignarHospitales/>} />
         <Route path="/busqueda" element={<ResultadosBusqueda />} />
         <Route path="/perfil" element={<Perfil />} />
+        <Route path="/auditorias/:id/detalle" element={<AuditoriaDetalle />} />
         
       </Route>
     </Routes>

@@ -55,6 +55,7 @@ exports.listarAuditorias = (req, res) => {
     JOIN \`detalle-auditoria\` as da ON a.idAuditoria = da.idAuditoria 
     JOIN efectores as e ON e.idEfector = a.idEfector 
     JOIN atenciones as at ON da.idAtencion = at.idAtencion
+    LEFT JOIN motivos m ON da.idMotivo = m.idMotivo
     ORDER BY a.idAuditoria DESC;
   `, (err, rows) => {
     if (err) return res.status(500).json({ error: 'Error al listar auditorías' });

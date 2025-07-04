@@ -21,6 +21,15 @@ export default function AuditoriasList() {
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 10;
   const navigate = useNavigate();
+  const [motivosTotales, setMotivosTotales] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/motivosTotales')
+      .then(res => res.json())
+      .then(data => setMotivosTotales(data))
+      .catch(err => Swal.fire('Error', err.message, 'error'));
+  }, []);
+
 
   useEffect(() => {
     fetch('http://localhost:3000/api/auditorias')
@@ -33,7 +42,7 @@ export default function AuditoriasList() {
       .catch(err => Swal.fire('Error', err.message, 'error'));
   }, []);
 
-  const filteredRows = auditorias; // Aquí podrías aplicar filtros en el futuro
+  const filteredRows = auditorias; 
 
   const paginatedRows = useMemo(() => {
     const start = pageIndex * pageSize;
@@ -112,6 +121,7 @@ export default function AuditoriasList() {
                   onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e3f2fd')}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor =
                     (pageIndex * pageSize + idx) % 2 === 0 ? '#f5f5f5' : '#fff')}
+                  onClick={() => navigate(`/auditorias/${a.idAuditoria}/detalle`)}
                 >
                   <td style={tdStyle}>{a.idAuditoria}</td>
                   <td style={tdStyle}>{a.Hospital}</td>
@@ -125,14 +135,20 @@ export default function AuditoriasList() {
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
                     <button
-                      onClick={() => navigate(`/auditorias/${a.idAuditoria}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/auditorias/${a.idAuditoria}`);
+                      }}
                       style={iconButtonStyle('#1976d2')}
                       title="Editar"
                     >
                       <FiEdit />
                     </button>
                     <button
-                      onClick={() => eliminar(a.idAuditoria)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          eliminar(a.idAuditoria);
+                        }}
                       style={iconButtonStyle('#d32f2f')}
                       title="Eliminar"
                     >
@@ -222,12 +238,12 @@ export default function AuditoriasList() {
             <div style={{ flex: '1 1 500px', maxWidth: '600px' }}>
               <Pie
                 data={{
-                  labels: auditorias.map(a => a.Hospital),
+                  labels: motivosTotales.map(m => m.motivo),
                   datasets: [
                     {
-                      label: 'Total Débito',
-                      data: auditorias.map(a => a.totalDebito),
-                      backgroundColor: auditorias.map(
+                      label: 'Cantidad de Auditorías',
+                      data: motivosTotales.map(m => m.cantidad),
+                      backgroundColor: motivosTotales.map(
                         () => `hsl(${Math.random() * 360}, 70%, 60%)`
                       )
                     }
@@ -237,7 +253,8 @@ export default function AuditoriasList() {
                   responsive: true,
                   maintainAspectRatio: false,
                   plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Distribución por Motivos' }
                   }
                 }}
                 height={250}
