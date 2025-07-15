@@ -9,6 +9,7 @@ import {
   getSortedRowModel,
   flexRender,
 } from "@tanstack/react-table";
+import API_URL from "../config";
 
 const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
   const [columnFilters, setColumnFilters] = useState([]);
@@ -21,11 +22,12 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
   const [motivos, setMotivos] = useState([]);
   const pageSize = 30;
   const navigate = useNavigate();
+  const [hayCambios, setHayCambios] = useState(false);
 
   
   useEffect(() => {
     // Obtener los motivos desde el backend
-    fetch("http://localhost:3000/api/motivos")
+    fetch(`${API_URL}/api/motivos`)
       .then((res) => res.json())
       .then((data) => {
         setMotivos(data);
@@ -56,6 +58,38 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
     setCheckedRows(nuevosChecks);
   }, [datos]);
 
+  useEffect(() => {
+    if (!editarAuditoriaId || !Array.isArray(datos)) return;
+
+    const motivosMap = {};
+
+    datos.forEach((row) => {
+      const rowKey = row.idAtencion;
+
+      if (row.idMotivo) {
+        motivosMap[rowKey] = { motivo: row.idMotivo };
+      }
+    });
+
+    console.log("Motivos map:", motivosMap); // Verifica el contenido del mapa de motivos
+
+    setMotivosValues(motivosMap);
+  }, [editarAuditoriaId, datos]);
+  
+  useEffect(() => {
+    const cambios = datos.some(item => {
+      const valorTotal = parseFloat(item.valorTotal) || 0;
+      const debito = parseFloat(item.debito) || 0;
+      const debitoPercent = valorTotal ? debito / valorTotal : 0;
+      const tieneMotivo = item.motivo_id !== null && item.motivo_id !== undefined;
+      const revisado = !!item.revisado;
+
+      return debitoPercent > 0 || tieneMotivo || revisado;
+    });
+
+    setHayCambios(cambios);
+  }, [datos]);
+
 
   const handleInputChange = (rowId, value) => {
     setInputValues((prev) => ({ ...prev, [rowId]: value }));
@@ -73,6 +107,7 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
     }));
   };
 
+  
 
   const columns = useMemo(() => {
   if (!datos || datos.length === 0) return [];
@@ -127,9 +162,10 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
             const rowKey = row.original.idAtencion;
             return (
               <select
-                value={motivosValues[rowKey]?.motivo || ""} // Estableces el motivo ya guardado aquí
+                value={motivosValues[rowKey]?.motivo || ""}
                 onChange={(e) => handleMotivoChange(rowKey, Number(e.target.value))}
-                style={{ padding: '6px', borderRadius: '5px', border: '1px solid #ccc' }}
+                disabled={parseFloat(inputValues[rowKey]) <= 0 || isNaN(parseFloat(inputValues[rowKey]))}
+                style={{ padding: '6px', borderRadius: '5px', border: '1px solid #ccc', backgroundColor: parseFloat(inputValues[rowKey]) > 0 ? 'white' : '#f0f0f0' }}
               >
                 <option value="">Seleccionar motivo</option>
                 {motivos.map((motivo) => (
@@ -202,10 +238,11 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
             const rowKey = row.original.idAtencion;
             return (
              <select
-              value={motivosValues[rowKey]?.motivo || ""}
-              onChange={(e) => handleMotivoChange(rowKey, Number(e.target.value))}
-              style={{ padding: '6px', borderRadius: '5px', border: '1px solid #ccc' }}
-            >
+                value={motivosValues[rowKey]?.motivo || ""}
+                onChange={(e) => handleMotivoChange(rowKey, Number(e.target.value))}
+                disabled={parseFloat(inputValues[rowKey]) <= 0 || isNaN(parseFloat(inputValues[rowKey]))}
+                style={{ padding: '6px', borderRadius: '5px', border: '1px solid #ccc', backgroundColor: parseFloat(inputValues[rowKey]) > 0 ? 'white' : '#f0f0f0' }}
+              >
               <option value="">Seleccionar motivo</option>
               {motivos.map((motivo) => (
                 <option key={motivo.idMotivo} value={motivo.idMotivo}>
@@ -278,10 +315,51 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
   }, [filteredRows, pageIndex, pageSize]);
 
   const totalPages = Math.ceil(filteredRows.length / pageSize);
+  
+  useEffect(() => {
+    const cambios = filteredRows.some((row) => {
+      const rowKey = row.original.idAtencion;
+      const valorNumerico = parseFloat(inputValues[rowKey]) || 0;
+      const revisado = !!checkedRows[rowKey];
+      const motivo_id = motivosValues[rowKey]?.motivo;
+
+      return valorNumerico > 0 || revisado || motivo_id !== undefined;
+    });
+
+    setHayCambios(cambios);
+  }, [inputValues, checkedRows, motivosValues, filteredRows]);
+
 
   useEffect(() => {
     setPageIndex(0);
   }, [columnFilters]);
+
+  useEffect(() => {
+  const idUsuario = 2; // 🔁 Deberías obtener esto desde contexto de usuario o props
+  const idEfector = datos[0]?.idEfector;
+  const periodo = datos[0]?.periodo;
+
+  if (!editarAuditoriaId && idUsuario && idEfector && periodo) {
+    fetch(`${API_URL}/api/auditorias-en-progreso/${idUsuario}/${idEfector}/${periodo}`)
+      .then((res) => {
+        if (res.status === 404) {
+          console.log('No hay borrador guardado');
+          return null;
+        }
+        return res.json();
+      })
+      .then((draft) => {
+        if (draft && Array.isArray(draft)) {
+          console.log('Cargando borrador desde el backend...');
+          setDatos(draft);
+        }
+      })
+      .catch((err) => {
+        console.error('Error al recuperar borrador:', err);
+      });
+  }
+}, [editarAuditoriaId, datos]);
+
 
   const totalDebito = useMemo(() => {
     if (tipo !== "atenciones") return 0;
@@ -293,7 +371,104 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
     }, 0);
   }, [filteredRows, inputValues, tipo]);
 
-const handleEnviarRegistros = () => {
+  const totalRevisados = useMemo(() => {
+    return filteredRows.reduce((acc, row) => {
+      const rowKey = row.original.idAtencion;
+      return acc + (checkedRows[rowKey] ? 1 : 0);
+    }, 0);
+  }, [filteredRows, checkedRows]);
+
+  const paginationButtonStyle = (disabled) => ({
+    backgroundColor: '#1976d2',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    padding: '6px 12px',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+    transition: 'background-color 0.3s ease',
+    fontWeight: 'bold'
+  });
+
+
+  const handleClearFilters = () => {
+    // Resetear el estado de filtros global
+    setColumnFilters([]);
+
+    // Forzar limpieza de valores en columnas filtrables
+    table.getAllLeafColumns().forEach((column) => {
+      if (column.getCanFilter()) {
+        column.setFilterValue(undefined); // O "" si usás texto simple
+      }
+    });
+
+    // Reiniciar paginación
+    setPageIndex(0);
+  };
+
+const handleGuardarBorrador = async () => {
+  const registros = filteredRows.map((row) => {
+    const original = row.original;
+    const rowKey = original.idAtencion;
+    const debito = parseFloat(original.valorTotal) * parseFloat(inputValues[rowKey] || 0);
+    const motivo_id = motivosValues[rowKey]?.motivo;
+
+    return {
+      ...original,
+      debito: debito.toFixed(2),
+      motivo_id,
+      revisado: !!checkedRows[rowKey],
+    };
+  });
+
+  const periodo = registros[0]?.periodo || new Date().toISOString().slice(0, 7);
+  const idEfector = registros[0]?.idEfector || 0;
+  const idUsuario = 2;
+
+  try {
+    // Verificamos si ya existe un progreso guardado
+    const checkRes = await fetch(`${API_URL}/api/auditorias-en-progreso/${idUsuario}/${idEfector}/${periodo}`);
+    
+    if (checkRes.ok) {
+      const data = await checkRes.json();
+      if (data && Array.isArray(data) && data.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Ya existe un progreso guardado',
+          text: 'No podés guardar un nuevo progreso para este efector y período.',
+        });
+        return;
+      }
+    }
+
+    // Si no existe, guardamos normalmente
+    const saveRes = await fetch(`${API_URL}/api/auditorias-en-progreso/${idUsuario}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idUsuario, idEfector, periodo, datos: registros }),
+    });
+
+    if (!saveRes.ok) {
+      throw new Error('Error al guardar borrador');
+    }
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Borrador guardado correctamente',
+    }).then(() => {
+      window.location.href = '/registros/atenciones'; 
+    });
+  } catch (err) {
+    console.error('Error guardando borrador:', err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message || 'Algo salió mal',
+    });
+  }
+};
+
+  const handleEnviarRegistros = () => {
     const todosTildados = filteredRows.every((row) => checkedRows[row.original.idAtencion]);
 
     if (!todosTildados) {
@@ -341,8 +516,8 @@ const handleEnviarRegistros = () => {
 
     const method = editarAuditoriaId ? 'PUT' : 'POST';
     const url = editarAuditoriaId
-      ? `http://localhost:3000/api/auditorias/${editarAuditoriaId}`
-      : 'http://localhost:3000/api/auditorias';
+      ? `${API_URL}/api/auditorias/${editarAuditoriaId}`
+      : `${API_URL}/api/auditorias`;
 
     fetch(url, {
       method,
@@ -425,7 +600,18 @@ const handleEnviarRegistros = () => {
   return (
     <div>
       {tipo === "atenciones" && (
-        <div style={{ marginBottom: "10px", fontWeight: "bold" }}>
+    
+      <div
+        style={{
+          marginBottom: "10px",
+          fontWeight: "bold",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* Lado izquierdo */}
+        <div>
           <button
             onClick={handleEnviarRegistros}
             style={{
@@ -443,6 +629,26 @@ const handleEnviarRegistros = () => {
           </button>
 
           <button
+            onClick={handleGuardarBorrador}
+            disabled={!hayCambios}
+            style={{
+              padding: '8px 14px',
+              backgroundColor: !hayCambios ? '#ccc' : '#ff9800',
+              border: 'none',
+              borderRadius: '6px',
+              color: 'white',
+              cursor: !hayCambios ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            Guardar Progreso
+          </button>
+
+        </div>
+
+        {/* Lado derecho */}
+        <div>
+          <button
             onClick={exportarAExcel}
             style={{
               padding: '8px 14px',
@@ -451,13 +657,29 @@ const handleEnviarRegistros = () => {
               borderRadius: '6px',
               color: 'white',
               cursor: 'pointer',
+              marginRight: '10px',
               fontWeight: 'bold',
             }}
           >
             Exportar a Excel
           </button>
+
+          <button
+            onClick={handleClearFilters}
+            style={{
+              padding: '8px 14px',
+              backgroundColor: 'green',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 'bold',
+            }}
+          >
+            Borrar filtros
+          </button>
         </div>
-      )}
+      </div>
+    )}
 
       <div style={{ marginBottom: '10px' }}>
         <strong>Mostrar columnas:</strong>
@@ -473,19 +695,6 @@ const handleEnviarRegistros = () => {
         ))}
       </div>
 
-      <button
-        onClick={() => setColumnFilters([])}
-        style={{
-          marginBottom: '10px',
-          padding: '6px 10px',
-          backgroundColor: 'green',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-        }}
-      >
-        Borrar filtros
-      </button>
 
       <div style={{
         overflowX: 'auto',
@@ -506,9 +715,15 @@ const handleEnviarRegistros = () => {
               <tr>
                 {table.getVisibleLeafColumns().map((col) => (
                   <th key={col.id} style={{ ...thStyle, backgroundColor: '#b3e5fc' }}>
+                    
                     {col.columnDef.header === 'Débito $' ? (
                       <span style={{ color: '#00796b', fontWeight: 'bold', fontSize: '1.2rem' }}>
                         Total: ${totalDebito.toFixed(2)}
+                      </span>
+                    ) : null}
+                    {col.columnDef.header === "Revisado" ? (
+                      <span style={{ color: '#00796b', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                        {totalRevisados} / {filteredRows.length}
                       </span>
                     ) : null}
                   </th>
@@ -530,6 +745,7 @@ const handleEnviarRegistros = () => {
                       {header.column.getCanFilter() && (
                         <input
                           type="text"
+                          value={header.column.getFilterValue() ?? ""}
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => header.column.setFilterValue(e.target.value)}
                           placeholder="Filtrar..."
@@ -563,45 +779,40 @@ const handleEnviarRegistros = () => {
           </tbody>
         </table>
           <div style={{ marginTop: "10px", textAlign: 'center' }}>
-            <button
-              onClick={() => setPageIndex((p) => Math.max(p - 1, 0))}
-              disabled={pageIndex === 0}
-              style={{
-                backgroundColor: '#1976d2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '6px 10px',
-                cursor: pageIndex === 0 ? 'not-allowed' : 'pointer',
-                marginRight: '8px'
-              }}
-            >
-              &lt;
-            </button>
+            <div style={{ 
+              marginTop: "20px", 
+              textAlign: 'center', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center',
+              gap: '12px',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={() => setPageIndex(p => Math.max(p - 1, 0))}
+                disabled={pageIndex === 0}
+                style={paginationButtonStyle(pageIndex === 0)}
+              >
+                &lt;
+              </button>
 
-            <span style={{ fontWeight: 'bold', fontSize: '14px' }}>
-              Página {pageIndex + 1} de {totalPages}
-            </span>
+              <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#333' }}>
+                Página {pageIndex + 1} de {totalPages}
+              </span>
 
-            <button
-              onClick={() => setPageIndex((p) => Math.min(p + 1, totalPages - 1))}
-              disabled={pageIndex >= totalPages - 1}
-              style={{
-                backgroundColor: '#1976d2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '6px 10px',
-                cursor: pageIndex >= totalPages - 1 ? 'not-allowed' : 'pointer',
-                marginLeft: '8px'
-              }}
-            >
-              &gt;
-            </button>
+              <button
+                onClick={() => setPageIndex(p => Math.min(p + 1, totalPages - 1))}
+                disabled={pageIndex >= totalPages - 1}
+                style={paginationButtonStyle(pageIndex >= totalPages - 1)}
+              >
+                &gt;
+              </button>
 
-            <span style={{ marginLeft: '15px', fontSize: '14px', color: '#555' }}>
-              Total de registros: {filteredRows.length}
-            </span>
+              <span style={{ fontSize: '14px', color: '#777' }}>
+                Total de registros: {table.getFilteredRowModel().rows.length}
+              </span>
+            </div>
+
           </div>
 
       </div>

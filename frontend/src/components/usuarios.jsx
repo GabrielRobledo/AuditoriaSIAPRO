@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { FiEdit, FiTrash2, FiRotateCcw } from 'react-icons/fi';
+import API_URL from '../config';
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -14,7 +15,7 @@ const Usuarios = () => {
 
   const cargarUsuarios = () => {
     axios
-      .get(`http://localhost:3000/api/auth/usuarios?eliminados=${mostrarEliminados}`)
+      .get(`${API_URL}/api/auth/usuarios?eliminados=${mostrarEliminados}`)
       .then((res) => setUsuarios(res.data))
       .catch((err) => console.error('Error al obtener usuarios:', err));
   };
@@ -30,7 +31,7 @@ const Usuarios = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:3000/api/auth/usuarios/${id}`)
+          .delete(`${API_URL}/api/auth/usuarios/${id}`)
           .then(() => {
             Swal.fire('Eliminado', 'Usuario eliminado correctamente', 'success');
             cargarUsuarios();
@@ -53,7 +54,7 @@ const Usuarios = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .put(`http://localhost:3000/api/auth/usuarios/restore/${id}`)
+          .put(`${API_URL}/api/auth/usuarios/restore/${id}`)
           .then(() => {
             Swal.fire('Restaurado', 'El usuario fue restaurado', 'success');
             cargarUsuarios();
@@ -77,7 +78,7 @@ const Usuarios = () => {
   const handleEditSubmit = (e) => {
     e.preventDefault();
     axios
-      .put(`http://localhost:3000/api/auth/usuarios/${editingUser.idUsuario}`, editingUser)
+      .put(`${API_URL}/api/auth/usuarios/${editingUser.idUsuario}`, editingUser)
       .then(() => {
         Swal.fire('Actualizado', 'Usuario editado correctamente', 'success');
         setEditingUser(null);

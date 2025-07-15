@@ -6,7 +6,6 @@ import '../styles/navbar.css'
 const sidebar = ({ onSeleccion }) => {
   return (
     <Menu theme='dark' style={{paddingTop:'20%'}}>
-        
         <Menu.Item key="Register" icon={<HomeOutlined/>}>
             <Link to="/register">Register</Link>
         </Menu.Item>
@@ -16,9 +15,17 @@ const sidebar = ({ onSeleccion }) => {
         <Menu.Item key="DashboardAuditor" icon={<DashboardOutlined/>}>
             <Link to="/dashboardAuditor">Dashboard Auditor</Link>
         </Menu.Item>
-        <Menu.Item key="Auditorias" icon={<BarsOutlined/>}>
-           <Link to="/auditorias">Auditoria</Link>
-        </Menu.Item>
+        <Menu.SubMenu key="AuditoriaList" icon={<BarsOutlined/>}  title="Auditorias">
+          <Menu.Item key="auditoriasPendientes">
+            <Link to="/registros/atenciones">Pendientes</Link>
+          </Menu.Item>
+          <Menu.Item key="auditoriasParciales">
+            <Link to="/auditoriasParciales">Parciales</Link>
+          </Menu.Item>
+          <Menu.Item key="auditorias">
+            <Link to="/auditorias">Cerradas</Link>
+          </Menu.Item>
+        </Menu.SubMenu>
         <Menu.Item key="Usuarios" icon={<BarsOutlined/>}>
            <Link to="/usuarios">Usuarios</Link>
         </Menu.Item>
@@ -33,9 +40,16 @@ const sidebar = ({ onSeleccion }) => {
             <Link to="/registros/efectores">Prestadores</Link>
           </Menu.Item>
           </Menu.SubMenu>
-                  <Menu.Item key="asignaciones" icon={<BarsOutlined/>}>
-            <Link to="/asignaciones">Asignar Hospitales</Link>
-          </Menu.Item>
+        <Menu.Item key="asignaciones" icon={<BarsOutlined/>}>
+          <Link to="/asignaciones">Asignar Hospitales</Link>
+        </Menu.Item>
+        <Menu.Item key="estadisticasCierres" icon={<BarsOutlined/>}>
+          <Link to="/estadisticasCierres">Estadísticas Cierres</Link> 
+        </Menu.Item>
+        <Menu.Item key="cierreDeAuditoria" icon={<BarsOutlined/>}>
+          <Link to="/cierreDeAuditoria">Cierre Auditoria</Link> 
+        </Menu.Item>
+        
     </Menu>
   )
 }

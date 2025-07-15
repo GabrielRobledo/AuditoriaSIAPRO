@@ -12,6 +12,15 @@ import AuditoriasList from './components/listaAuditorias';
 import ResultadosBusqueda from './components/ResultadosBusquedas';
 import Perfil from './components/perfil';
 import AuditoriaDetalle from './components/auditoriaDetallePDF';
+import HospConBorradorCards from './components/listadoAuditoriasBorradores';
+import TablaBorradores from './components/tablaAuditoriaProgreso';
+import EstadisticasCierresAuditorias from './components/estadisticasCierresAuditorias';
+import CierreDeAuditoria from './components/cierreDeAuditoria';
+
+const hoy = new Date();
+const anio = hoy.getFullYear();
+const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+const periodo = `${anio}-${mes}`;
 
 const App = () => {
   return (
@@ -30,7 +39,11 @@ const App = () => {
         <Route path="/busqueda" element={<ResultadosBusqueda />} />
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/auditorias/:id/detalle" element={<AuditoriaDetalle />} />
-        
+        <Route path="/auditoriasParciales" element={<HospConBorradorCards />} />
+        <Route path="/borradores/tabla/:idEfector" element={<TablaBorradores />} />
+        <Route path="/estadisticasCierres" element={<EstadisticasCierresAuditorias />} />
+        <Route path="/cierreDeAuditoria" element={<CierreDeAuditoria periodo={periodo} idUsuario={2} />} />
+
       </Route>
     </Routes>
   );

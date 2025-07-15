@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import API_URL from '../config';
 
 export default function AuditoriaDetalle() {
   const { id } = useParams();
@@ -12,6 +14,53 @@ export default function AuditoriaDetalle() {
 
   const logoBase64  = '/logo1.png';
   const slogan = 'Tu auditoría de confianza';
+
+    const exportarExcel = () => {
+  const encabezado = [
+    ['Auditoría #' + auditoria.idAuditoria],
+    ['Hospital:', auditoria.detalles[0]?.hospital || '-'],
+    ['Periodo:', auditoria.periodo],
+    ['Total Facturado:', totalFacturado],
+    ['Total Débito:', parseFloat(auditoria.totalDebito || 0)],
+    ['Total Neto:', totalFacturado - auditoria.totalDebito],
+    [], // Línea vacía para espacio
+    ['DETALLE DE REGISTROS'], // Sección separada
+    [
+      'Paciente', 'Fecha Atención', 'Tipo Atención', 'Código Práctica',
+      'Fecha Práctica', 'Módulo', 'Cantidad', 'Valor Total', 'Débito', 'Motivo'
+    ]
+  ];
+
+  const detalles = auditoria.detalles.map(d => [
+    d.apeYnom,
+    formatDate(d.fecha),
+    d.tipoAtencion,
+    d.codPractica,
+    formatDate(d.fechaPractica),
+    d.moduloDescripcion,
+    d.cantidad,
+    d.valorTotal,
+    d.debito,
+    getNombreMotivo(d.idMotivo)
+  ]);
+
+  const wsData = [...encabezado, ...detalles];
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, 'Auditoría');
+
+  // Ancho de columnas opcional
+  const wscols = [
+    { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+    { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 25 }
+  ];
+  ws['!cols'] = wscols;
+
+  XLSX.writeFile(wb, `auditoria_${auditoria.idAuditoria}.xlsx`);
+};
+
+
 
   const exportarPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
@@ -78,7 +127,7 @@ export default function AuditoriaDetalle() {
 };
 
     useEffect(() => {
-    fetch('http://localhost:3000/api/motivos')
+    fetch(`${API_URL}/api/motivos`)
         .then(res => res.json())
         .then(data => {
         console.log('→ Motivos recibidos:', data); 
@@ -88,7 +137,7 @@ export default function AuditoriaDetalle() {
     }, []);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/auditorias/${id}`)
+    fetch(`${API_URL}/api/auditorias/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('No se pudo obtener la auditoría');
         return res.json();
@@ -114,20 +163,44 @@ export default function AuditoriaDetalle() {
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Detalle de Auditoría #{auditoria.idAuditoria}</h2>
+        <div style={{
+        marginBottom: '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem'
+        }}>
         <button
             onClick={exportarPDF}
             style={{
-                marginBottom: '1rem',
-                padding: '10px 20px',
-                backgroundColor: '#2e7d32',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer'
+            padding: '10px 20px',
+            backgroundColor: '#950101',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
             }}
-            >
-        📄 Exportar a PDF
+        >
+            📄 Exportar a PDF
         </button>
+
+        {/* Línea divisoria entre botones */}
+        <div style={{ height: '30px', width: '1px', backgroundColor: '#ccc' }} />
+
+        <button
+            onClick={exportarExcel}
+            style={{
+            padding: '10px 20px',
+            backgroundColor: '#2e7d32',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer'
+            }}
+        >
+            📊 Exportar a Excel
+        </button>
+        </div>
+
 
       {/* === Encabezado === */}
       <div style={{
@@ -171,7 +244,7 @@ export default function AuditoriaDetalle() {
                 <td style={tdStyle}>{formatDate(d.fecha)}</td>
                 <td style={tdStyle}>{d.tipoAtencion}</td>
                 <td style={tdStyle}>{d.codPractica}</td>
-                <td style={tdStyle}>{formatDate(d.fechaPractica)}</td>
+                <td style={tdStyle}>{formatDate2(d.fechaPractica)}</td>
                 <td style={tdStyle}>{d.moduloDescripcion}</td>
                 <td style={tdStyle}>{d.cantidad}</td>
                 <td style={tdStyle}>${d.valorTotal.toFixed(2)}</td>
@@ -205,7 +278,7 @@ export default function AuditoriaDetalle() {
           </tbody>
         </table>
       </div>
-
+    <div >
       <button
         onClick={() => navigate('/auditorias')}
         style={{
@@ -218,8 +291,24 @@ export default function AuditoriaDetalle() {
           cursor: 'pointer'
         }}
       >
-        ← Volver al Listado
+        ← Auditorias
       </button>
+      <button
+        onClick={() => navigate('/estadisticasCierres')}
+        style={{
+          marginTop: '2rem',
+          padding: '10px 20px',
+          backgroundColor: '#1976d2',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer'
+        }}
+      >
+        ← Estadisticas
+      </button>
+    </div>
+      
     </div>
   );
 }
@@ -230,6 +319,23 @@ const formatDate = (dateString) => {
   if (!dateString) return '-';
   return new Date(dateString).toLocaleDateString();
 };
+
+const formatDate2 = (dateString) => {
+  if (!dateString) return '-';
+
+  const [datePart, timePart] = dateString.split(' '); // '14/08/2024', '06:40'
+  const [day, month, year] = datePart.split('/').map(Number); // [14, 8, 2024]
+
+  const dateObj = new Date(year, month - 1, day); // Meses en JS van de 0 a 11
+
+  if (isNaN(dateObj.getTime())) {
+    console.warn('Fecha inválida:', dateString);
+    return '-';
+  }
+
+  return dateObj.toLocaleDateString(); // o con opciones si querés mostrar más
+};
+
 
 const thStyle = {
   backgroundColor: '#1976d2',

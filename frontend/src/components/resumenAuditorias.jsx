@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_URL from '../config';
 import { Box, Typography, CircularProgress, Paper } from '@mui/material';
 import KpiCard from './kipcards';
 import { Bar } from 'react-chartjs-2';
@@ -26,7 +27,7 @@ const ResumenAuditorias = () => {
 
   useEffect(() => {
     axios
-      .get('http://localhost:3000/api/auditorias')
+      .get(`${API_URL}/api/auditorias`)
       .then((res) => {
         setAuditorias(res.data);
         setLoading(false);

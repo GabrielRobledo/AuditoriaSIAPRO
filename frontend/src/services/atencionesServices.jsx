@@ -1,6 +1,7 @@
 import axios from 'axios';
+import API_URL from '../config';
 
-const API_URL = 'http://localhost:3000/api/atenciones'; 
+const API_URL = `${API_URL}/api/atenciones`; 
 
 export const getAtenciones = async () => {
   try {

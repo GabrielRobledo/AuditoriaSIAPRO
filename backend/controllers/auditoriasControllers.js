@@ -1,4 +1,6 @@
 const db = require('../db/conexion');
+const auditoriaModel = require('../models/auditoriaModels');
+const borradoresModel = require('../models/auditoriasProgresoModels');
 
 exports.crearAuditoria = (req, res) => {
   const { periodo, idUsuario, idEfector, totalDebito, detalles } = req.body;
@@ -87,22 +89,21 @@ exports.listarAuditorias = (req, res) => {
 };
 
 
-exports.obtenerAuditoria = (req, res) => {
+exports.obtenerAuditoria = async (req, res) => {
   const { id } = req.params;
 
+  // Primero intentamos obtener una auditoría cerrada
   db.query(
     `
     SELECT 
       a.idAuditoria, a.periodo, a.idUsuario, a.idEfector, a.totalDebito,
       da.idAtencion, da.importe AS debito, da.idMotivo,
-
       at.tipoAtencion, at.fecha, 
       b.apeYnom, 
       n.codPractica, at.fechaPractica, 
       at.cantidad, at.valorTotal, 
       m.descripcion AS moduloDescripcion, 
       ef.RazonSocial AS hospital
-
     FROM auditoria a
     JOIN \`detalle-auditoria\` da ON da.idAuditoria = a.idAuditoria
     JOIN atenciones at ON at.idAtencion = da.idAtencion
@@ -110,46 +111,61 @@ exports.obtenerAuditoria = (req, res) => {
     INNER JOIN nomencladores n ON at.idNomenclador = n.idNomenclador
     INNER JOIN modulos m ON n.idModulo = m.idModulo
     INNER JOIN efectores ef ON at.idEfector = ef.idEfector
-
     WHERE a.idAuditoria = ?
     `,
     [id],
-    (err, rows) => {
+    async (err, rows) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: 'Error al obtener auditoría' });
       }
-      if (rows.length === 0) {
-        return res.status(404).json({ error: 'No existe la auditoría' });
+
+      // ✅ Si encontramos una auditoría cerrada
+      if (rows.length > 0) {
+        const aud = {
+          idAuditoria: rows[0].idAuditoria,
+          periodo: rows[0].periodo,
+          idUsuario: rows[0].idUsuario,
+          idEfector: rows[0].idEfector,
+          totalDebito: rows[0].totalDebito,
+          detalles: rows.map(r => ({
+            idAtencion: r.idAtencion,
+            tipoAtencion: r.tipoAtencion,
+            fecha: r.fecha,
+            apeYnom: r.apeYnom,
+            codPractica: r.codPractica,
+            fechaPractica: r.fechaPractica,
+            cantidad: r.cantidad,
+            valorTotal: parseFloat(r.valorTotal),
+            moduloDescripcion: r.moduloDescripcion,
+            hospital: r.hospital,
+            idMotivo: r.idMotivo || null,
+            debito: parseFloat(r.debito)
+          }))
+        };
+        return res.json(aud);
       }
 
-      const aud = {
-        idAuditoria: rows[0].idAuditoria,
-        periodo: rows[0].periodo,
-        idUsuario: rows[0].idUsuario,
-        idEfector: rows[0].idEfector,
-        totalDebito: rows[0].totalDebito,
-        detalles: rows.map(r => ({
-          idAtencion: r.idAtencion,
-          tipoAtencion: r.tipoAtencion,
-          fecha: r.fecha,
-          apeYnom: r.apeYnom,
-          codPractica: r.codPractica,
-          fechaPractica: r.fechaPractica,
-          cantidad: r.cantidad,
-          valorTotal: parseFloat(r.valorTotal),
-          moduloDescripcion: r.moduloDescripcion,
-          hospital: r.hospital,
-          idMotivo: r.idMotivo || null,
-          debito: parseFloat(r.debito)
-        }))
-      };
+      // 🔄 Si no existe, intentamos buscar como borrador
+      try {
+        const borrador = await borradoresModel.getDraftById(id);
+        if (!borrador) return res.status(404).json({ error: 'No existe la auditoría' });
 
-      res.json(aud);
+        res.json({
+          idAuditoria: parseInt(id),
+          periodo: borrador.periodo,
+          idEfector: borrador.idEfector,
+          idUsuario: borrador.idUsuario,
+          totalDebito: borrador.totalDebito,
+          detalles: borrador.detalles || []
+        });
+      } catch (error) {
+        console.error('Error al obtener borrador:', error);
+        res.status(500).json({ error: 'Error interno al obtener auditoría' });
+      }
     }
   );
 };
-
 
 exports.editarAuditoria = (req, res) => {
   const { id } = req.params;
@@ -211,3 +227,91 @@ exports.borrarAuditoria = (req, res) => {
     });
   });
 };
+
+
+exports.getEstadoAuditorias = async (req, res) => {
+  const { periodo, idUsuario } = req.params;
+
+  try {
+    const efectores = await auditoriaModel.getEfectores();
+    const cerradas = await auditoriaModel.getEfectoresConAuditoriaCerrada(periodo);
+    const borradores = await auditoriaModel.getEfectoresConBorrador(periodo, idUsuario);
+
+    const setCerradas = new Set(cerradas);
+    const setBorradores = new Set(borradores);
+
+    const resultado = efectores.map((e) => {
+      let estado = 'SIN_INICIAR';
+      if (setCerradas.has(e.idEfector)) estado = 'CERRADA';
+      else if (setBorradores.has(e.idEfector)) estado = 'BORRADOR';
+
+      return {
+        idEfector: e.idEfector,
+        RazonSocial: e.RazonSocial,
+        estado,
+      };
+    });
+
+    res.json({ efectores: resultado });
+  } catch (error) {
+    console.error('Error en getEstadoAuditorias:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+exports.getBorradores = async (req, res) => {
+  const idUsuario = parseInt(req.params.idUsuario, 10);
+
+  try {
+    const borradores = await new Promise((resolve, reject) => {
+      db.query(
+        `
+        SELECT 
+          aep.idSerial AS id,
+          aep.idUsuario,
+          aep.idEfector,
+          aep.periodo,
+          e.RazonSocial
+        FROM auditoria_en_progreso aep
+        JOIN efectores e ON aep.idEfector = e.idEfector
+        WHERE aep.idUsuario = ?
+        `,
+        [idUsuario],
+        (err, results) => {
+          if (err) reject(err);
+          else resolve(results);
+        }
+      );
+    });
+
+    res.json(borradores);
+  } catch (error) {
+    console.error('Error al obtener borradores:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+exports.obtenerBorradorPorEfector = async (req, res) => {
+  const idEfector = parseInt(req.params.idEfector, 10);
+  const idUsuario = req.query.idUsuario ? parseInt(req.query.idUsuario, 10) : null;
+
+  if (isNaN(idEfector)) {
+    return res.status(400).json({ error: 'idEfector inválido' });
+  }
+
+  try {
+    const borrador = await borradoresModel.getDraftByEfector(idEfector, idUsuario);
+    //console.log('Borrador obtenido:', borrador);  // <--- Aquí
+
+    if (!borrador) return res.status(404).json({ error: 'No se encontró borrador' });
+
+    res.json(borrador);
+  } catch (err) {
+    console.error('Error en obtenerBorradorPorEfector:', err);
+    res.status(500).json({ error: 'Error interno obteniendo borrador' });
+  }
+};
+
+
+
+

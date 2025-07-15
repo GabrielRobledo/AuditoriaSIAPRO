@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import API_URL from '../config';
 
 // Función para normalizar texto (quita tildes y pasa a minúsculas)
 const normalize = str =>
@@ -21,9 +22,9 @@ export default function ResultadosBusqueda() {
       try {
 
         const [uRes, eRes, aRes] = await Promise.all([
-          axios.get('http://localhost:3000/api/auth/usuarios'),
-          axios.get('http://localhost:3000/api/efectores'),
-          axios.get('http://localhost:3000/api/atenciones'),
+          axios.get(`${API_URL}/api/auth/usuarios`),
+          axios.get(`${API_URL}/api/efectores`),
+          axios.get(`${API_URL}/api/atenciones`),
         ]);
 
         // Ajuste: acceder a las propiedades reales

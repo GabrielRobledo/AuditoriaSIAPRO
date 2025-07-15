@@ -3,19 +3,21 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { FiClipboard, FiDollarSign } from 'react-icons/fi';
 import { FaHospital, FaTasks } from 'react-icons/fa';
+import API_URL from '../config';
 
 export default function DashboardAuditor() {
   const [auditorias, setAuditorias] = useState([]);
   const [atenciones, setAtenciones] = useState([]);
   const navigate = useNavigate();
+  
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/auditorias')
+    fetch(`${API_URL}/api/auditorias`)
       .then(res => res.json())
       .then(setAuditorias)
       .catch(err => Swal.fire('Error', err.message, 'error'));
 
-    fetch('http://localhost:3000/api/atenciones')
+    fetch( `${API_URL}/api/atenciones`)
       .then(res => res.json())
       .then(setAtenciones)
       .catch(err => Swal.fire('Error', err.message, 'error'));
@@ -39,7 +41,7 @@ export default function DashboardAuditor() {
         <div style={cardBlock}>
           <h2 style={sectionTitle}>Auditorías Cerradas</h2>
           <div style={cardsContainer}>
-            <div style={{ ...cardStyle, borderLeft: '5px solid #1976d2' }}>
+            <div style={{ ...cardStyle, borderLeft: '5px solid #1976d2' }} onClick={() => navigate(`/estadisticasCierres`)}>
               <FaTasks size={32} color="#1976d2" />
               <h3>Total Auditorías</h3>
               <p style={valueStyle}>{auditorias.length}</p>

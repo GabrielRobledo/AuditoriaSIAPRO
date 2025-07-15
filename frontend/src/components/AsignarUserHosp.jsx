@@ -21,6 +21,7 @@ import {
   Badge
 } from '@mui/material';
 import { ArrowForward, ArrowBack, Delete as DeleteIcon } from '@mui/icons-material';
+import API_URL from '../config'
 
 const AsignarHospitales = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -34,9 +35,9 @@ const AsignarHospitales = () => {
   const fetchData = async () => {
     try {
       const [usuariosRes, efectoresRes, asignacionesRes] = await Promise.all([
-        axios.get('http://localhost:3000/api/auth/usuarios'),
-        axios.get('http://localhost:3000/api/efectores'),
-        axios.get('http://localhost:3000/api/asignaciones')
+        axios.get(`${API_URL}/api/auth/usuarios`),
+        axios.get(`${API_URL}/api/efectores`),
+        axios.get(`${API_URL}/api/asignaciones`)
       ]);
 
       const usuariosData = usuariosRes.data;
@@ -86,7 +87,7 @@ const AsignarHospitales = () => {
       return;
     }
 
-    axios.get(`http://localhost:3000/api/asignaciones/${auditorId}`)
+    axios.get(`${API_URL}/api/asignaciones/${auditorId}`)
       .then(res => {
         const idsAsignados = res.data.map(a => a.idEfector);
         setAsignados(efectores.filter(e => idsAsignados.includes(e.idEfector)));
@@ -120,9 +121,18 @@ const AsignarHospitales = () => {
       return;
     }
 
+    if (asignados.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin hospitales asignados',
+        text: 'Debés asignar al menos un hospital antes de guardar.',
+      });
+      return;
+    }
+
     const efectoresIds = asignados.map(e => e.idEfector);
 
-    axios.post('http://localhost:3000/api/asignar-efectores', {
+    axios.post(`${API_URL}/api/asignar-efectores`, {
       idUsuario: auditorId,
       efectoresIds
     })
@@ -147,6 +157,7 @@ const AsignarHospitales = () => {
       });
   };
 
+
   const eliminarAsignacion = (idUsuario) => {
     Swal.fire({
       title: '¿Estás seguro?',
@@ -158,7 +169,7 @@ const AsignarHospitales = () => {
       confirmButtonText: 'Sí, eliminar'
     }).then((result) => {
       if (result.isConfirmed) {
-        axios.delete(`http://localhost:3000/api/asignaciones/${idUsuario}`)
+        axios.delete(`${API_URL}/api/asignaciones/${idUsuario}`)
           .then(() => {
             Swal.fire('Eliminado', 'Las asignaciones fueron eliminadas.', 'success');
             fetchData();
@@ -221,36 +232,34 @@ const AsignarHospitales = () => {
                   <CardContent sx={{ maxHeight: 480, overflowY: 'auto', p: 0 }}>
                     <List dense>
                       {disponibles.map(e => (
-                        <ListItemButton
-                          key={e.idEfector}
-                          onClick={() => asignar(e.idEfector)}
-                          sx={{
-                            px: 2,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            flexWrap: 'nowrap',
-                            gap: 1,
-                            '&:hover': {
-                              bgcolor: 'primary.light',
-                              color: 'white',
-                            },
-                          }}
-                        >
-                          <ListItemText
-                            primary={e.RazonSocial}
-                            sx={{
-                              flexGrow: 1,
-                              overflow: 'hidden',
-                              whiteSpace: 'normal',
-                              wordBreak: 'break-word',
-                            }}
-                          />
-                          <Box sx={{ flexShrink: 0 }}>
-                            <ArrowForward />
-                          </Box>
-                        </ListItemButton>
-
+                      <ListItemButton
+                        key={e.idEfector}
+                        onClick={() => asignar(e.idEfector)}
+                        sx={{
+                          px: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'nowrap',
+                          gap: 1,
+                          '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'white',
+                          },
+                        }}
+                      >
+                        <ListItemText
+                          primary={
+                            <Typography noWrap title={e.RazonSocial}>
+                              {e.RazonSocial}
+                            </Typography>
+                          }
+                          sx={{ flexGrow: 1, overflow: 'hidden' }}
+                        />
+                        <Box sx={{ flexShrink: 0 }}>
+                          <ArrowForward />
+                        </Box>
+                      </ListItemButton>
 
                       ))}
                     </List>
@@ -286,19 +295,17 @@ const AsignarHospitales = () => {
                         }}
                       >
                         <ListItemText
-                          primary={e.RazonSocial}
-                          sx={{
-                            flexGrow: 1,
-                            overflow: 'hidden',
-                            whiteSpace: 'normal',
-                            wordBreak: 'break-word',
-                          }}
+                          primary={
+                            <Typography noWrap title={e.RazonSocial}>
+                              {e.RazonSocial}
+                            </Typography>
+                          }
+                          sx={{ flexGrow: 1, overflow: 'hidden' }}
                         />
                         <Box sx={{ flexShrink: 0 }}>
                           <ArrowBack />
                         </Box>
                       </ListItemButton>
-
 
                       ))}
                     </List>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import '../styles/login.css';
+import API_URL from '../config';
 
 function Login() {
   const [usuario, setUsuario] = useState('');
@@ -11,7 +12,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const res = await axios.post('http://localhost:3000/api/login', { usuario, contraseña });
+      const res = await axios.post(`${API_URL}/api/login`, { usuario, contraseña });
       localStorage.setItem('token', res.data.token);
 
       Swal.fire({

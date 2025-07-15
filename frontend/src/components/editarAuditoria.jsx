@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import TablaConFiltro from '../components/tabla';
+import API_URL from '../config';
 
 export default function AuditoriaEdit() {
   const { id } = useParams();
@@ -10,7 +11,7 @@ export default function AuditoriaEdit() {
   const [aud, setAud] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/auditorias/${id}`)
+    fetch(`${API_URL}/api/auditorias/${id}`)
       .then(res => res.json())
       .then(data => {
         // Mapeamos los detalles para calcular el valorNumerico
@@ -39,7 +40,7 @@ export default function AuditoriaEdit() {
 
 
   const guardar = () => {
-    fetch(`http://localhost:3000/api/auditorias/${id}`, {
+    fetch(`${API_URL}/api/auditorias/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

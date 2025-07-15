@@ -1,12 +1,14 @@
 /* Contenedor de las tarjetas */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  padding: 2rem;
+  grid-template-columns: repeat(4, 1fr); /* 4 columnas de igual ancho */
+  gap: 20px; /* Espaciado entre tarjetas */
+  padding: 20px;
   background-color: #f8f9fa;
   border-radius: 8px;
 }
+
+
 
 /* Tarjeta individual */
 .card {
@@ -130,4 +132,31 @@ button:hover {
 button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.chart-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 10px auto;
+}
+
+.chart-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.card-summary {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.card-detail {
+  margin: 2px 0;
 }

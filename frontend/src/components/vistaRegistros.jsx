@@ -2,7 +2,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useMemo } from 'react';
 import TablaConFiltro from './tabla';
 import ListadoHospitales from '../components/listaHospitales';
-import * as XLSX from 'xlsx';
+import API_URL from '../config';
 
 const VistaRegistros = ({ editarAuditoria = false }) => {
   const { tipo, id } = useParams();
@@ -12,8 +12,9 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
   const [datos, setDatos] = useState([]);
   const [hospitales, setHospitales] = useState([]);
 
+  // 🔄 Traer listado de hospitales (efectores)
   useEffect(() => {
-    fetch('http://localhost:3000/api/efectores')
+    fetch( `${API_URL}/api/efectores`)
       .then(res => {
         if (!res.ok) throw new Error('Error al obtener hospitales');
         return res.json();
@@ -21,13 +22,14 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
       .then(json => setHospitales(json))
       .catch(err => {
         console.error('Error cargando hospitales:', err);
-        setHospitales([]);
+        setHospitales([]); // fallback vacío para evitar más errores
       });
   }, []);
 
+  // 🔁 Si está en modo edición de auditoría, traemos auditoría por ID
   useEffect(() => {
     if (editarAuditoria) {
-      fetch(`http://localhost:3000/api/auditorias/${id}`)
+      fetch(`${API_URL}/api/auditorias/${id}`)
         .then(res => {
           if (!res.ok) throw new Error('Error al obtener auditoría');
           return res.json();
@@ -52,7 +54,7 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
           setDatos([]);
         });
     } else if (tipo) {
-      fetch(`http://localhost:3000/api/${tipo}`)
+      fetch(`${API_URL}/api/${tipo}`)
         .then(res => {
           if (!res.ok) throw new Error('Error al obtener datos');
           return res.json();
@@ -65,16 +67,19 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
     }
   }, [tipo, editarAuditoria, id]);
 
+  // 🔍 Filtro por hospital
   const datosFiltrados = useMemo(() => {
-    if (tipo === 'atenciones' && hospitalFiltro) {
+    if (hospitalFiltro) {
       return datos.filter(d =>
         d.idEfector &&
         String(d.idEfector).toLowerCase() === String(hospitalFiltro).toLowerCase()
       );
     }
     return datos;
-  }, [datos, tipo, hospitalFiltro]);
+  }, [datos, hospitalFiltro]);
 
+
+  // 🏥 Mostrar nombre del hospital
   const nombreHospital = useMemo(() => {
     if (!hospitalFiltro || hospitales.length === 0) return null;
     const h = hospitales.find(hosp =>
@@ -83,6 +88,7 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
     return h?.RazonSocial || null;
   }, [hospitalFiltro, hospitales]);
 
+  // 🖥️ Si es vista general de atenciones sin filtro
   if (!editarAuditoria && tipo === 'atenciones' && !hospitalFiltro) {
     return (
       <div>
@@ -92,14 +98,20 @@ const VistaRegistros = ({ editarAuditoria = false }) => {
     );
   }
 
+  // 📋 Vista principal de registros (listado o edición)
   return (
     <div>
+      
       <h2>
         {editarAuditoria
           ? 'Editar Auditoría'
-          : `Listado de ${tipo?.charAt(0).toUpperCase() + tipo?.slice(1)}`}
+          : tipo
+            ? `Listado de ${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`
+            : 'Listado'
+        }
         {hospitalFiltro && nombreHospital && ` - Hospital: ${nombreHospital}`}
       </h2>
+
 
       <TablaConFiltro
         datos={datosFiltrados}
