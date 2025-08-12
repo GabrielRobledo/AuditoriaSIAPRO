@@ -129,6 +129,21 @@ const getDraftByEfector = (idEfector, idUsuario = null) => {
   });
 };
 
+const updateOnlyData = (idSerial, datos) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      UPDATE auditoria_en_progreso 
+      SET datos = ?, fechaguardado = CURRENT_TIMESTAMP 
+      WHERE idSerial = ?
+    `;
+
+    db.query(query, [JSON.stringify(datos), idSerial], (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 
 
 
@@ -140,4 +155,5 @@ module.exports = {
   listarParaUsuario,
   getDraftByEfector,
   deleteProgreso,
+  updateOnlyData,
 };

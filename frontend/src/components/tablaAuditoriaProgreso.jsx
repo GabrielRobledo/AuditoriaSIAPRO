@@ -196,6 +196,42 @@ const TablaBorradoresMui = () => {
     });
   };
 
+const handleGuardarProgreso = async () => {
+  const periodo = datos[0]?.periodo || new Date().toISOString().slice(0, 7);
+
+  try {
+    const response = await fetch(`${API_URL}/api/auditorias-en-progreso/actualizar/${idSerial}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        datos, // solo se actualiza esta columna + fechaguardado
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('No se pudo guardar el progreso');
+    }
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'Progreso guardado',
+      text: 'Tu progreso fue guardado exitosamente.',
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    navigate('/auditoriasParciales'); // ✅ Redirige tras el guardado
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al guardar',
+      text: err.message || 'No se pudo guardar el progreso.',
+    });
+  }
+};
 
 
   const exportToExcel = () => {
@@ -272,6 +308,20 @@ const TablaBorradoresMui = () => {
             }}
         >
           Cerrar Auditoría
+        </button>
+                <button onClick={handleGuardarProgreso}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: '#ffa000',
+            border: 'none',
+            borderRadius: '6px',
+            color: 'white',
+            cursor: 'pointer',
+            marginRight: '10px',
+            fontWeight: 'bold',
+          }}
+        >
+          Guardar Progreso
         </button>
 
         <div style={{ display: 'flex', gap: '10px' }}>

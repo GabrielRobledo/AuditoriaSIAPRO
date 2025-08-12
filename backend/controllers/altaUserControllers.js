@@ -145,11 +145,63 @@ const restoreUser = (req, res) => {
   });
 };
 
+const cambiarPassword = (req, res) => {
+  const id = req.params.id;
+  const { actual, nueva } = req.body;
+
+  if (!actual || !nueva) {
+    return res.status(400).json({ msg: 'Ambas contraseñas son requeridas' });
+  }
+
+  Usuario.getUserById(id, (err, user) => {
+    if (err) {
+      console.error('Error al obtener usuario:', err);
+      return res.status(500).json({ msg: 'Error del servidor' });
+    }
+
+    if (!user) {
+      return res.status(404).json({ msg: 'Usuario no encontrado' });
+    }
+
+    // Verificamos la contraseña actual
+    bcrypt.compare(actual, user.contraseña, (err, isMatch) => {
+      if (err) {
+        console.error('Error al comparar contraseñas:', err);
+        return res.status(500).json({ msg: 'Error al verificar contraseña' });
+      }
+
+      if (!isMatch) {
+        return res.status(401).json({ msg: 'La contraseña actual no es correcta' });
+      }
+
+      // Encriptamos y actualizamos la nueva contraseña
+      bcrypt.hash(nueva, 10, (err, hashedPassword) => {
+        if (err) {
+          console.error('Error al encriptar nueva contraseña:', err);
+          return res.status(500).json({ msg: 'Error al procesar la nueva contraseña' });
+        }
+
+        Usuario.updatePassword(id, hashedPassword, (err, result) => {
+          if (err) {
+            console.error('Error al actualizar contraseña:', err);
+            return res.status(500).json({ msg: 'Error al cambiar la contraseña' });
+          }
+
+          res.json({ msg: 'Contraseña actualizada con éxito' });
+        });
+      });
+    });
+  });
+};
+
+
 module.exports = {
   register,
   getAllUsers,
   deleteUser,
   updateUser,
   login,
-  restoreUser
+  restoreUser,
+  cambiarPassword,
 };
+

@@ -9,4 +9,13 @@ const atenciones = {
     }
 };
 
-module.exports = atenciones
+const atencionesTotales = {
+    getAll: (callback) => {
+        db.query('SELECT * FROM atenciones', (err, results)=>{
+            if (err) return callback(err);
+            callback(null, results)
+        });
+    }
+};
+
+module.exports = {atenciones, atencionesTotales};

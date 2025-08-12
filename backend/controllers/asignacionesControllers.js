@@ -56,6 +56,7 @@ exports.obtenerTodasAsignaciones = (req, res) => {
       console.error('Error al obtener asignaciones:', err);
       return res.status(500).json({ msg: 'Error al obtener asignaciones' });
     }
-    res.json(results);  // retorna [{idUsuario:1, idEfector:2}, ...]
+    res.json(results); 
   });
 };
+

@@ -7,6 +7,9 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import ZoomOutMapIcon from '@mui/icons-material/ZoomOutMap';
+import Dialog from '@mui/material/Dialog';
+import IconButton from '@mui/material/IconButton';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -25,6 +28,7 @@ import {
   Button,
   Stack,
   Paper,
+  Chip,
 } from '@mui/material';
 
 import '../styles/cardsHosp.css';
@@ -35,9 +39,22 @@ const EstadisticasCierresAuditorias = () => {
   const [auditorias, setAuditorias] = useState([]);
   const [periodoFiltro, setPeriodoFiltro] = useState('');
   const [hospitalFiltro, setHospitalFiltro] = useState([]);
+  const [cierres, setCierres] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
+    fetch(`${API_URL}/api/listarCierres`)
+      .then(res => {
+        if (!res.ok) throw new Error('No se pudo obtener los cierres');
+        return res.json();
+      })
+      .then(data => {
+        setCierres(data);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+
     fetch( `${API_URL}/api/auditorias`)
       .then(res => {
         if (!res.ok) throw new Error('No se pudo obtener las auditorías');
@@ -56,9 +73,13 @@ const EstadisticasCierresAuditorias = () => {
     new Set(auditorias.map(a => a.periodo))
   ).sort((a, b) => b.localeCompare(a));
 
-  // Obtener hospitales únicos
+// Obtener hospitales únicos filtrados por periodo seleccionado
   const hospitalesUnicos = Array.from(
-    new Set(auditorias.map(a => a.Hospital))
+    new Set(
+      auditorias
+        .filter(a => (periodoFiltro ? a.periodo === periodoFiltro : true))
+        .map(a => a.Hospital)
+    )
   ).sort();
 
   // Filtrar por periodo y hospital
@@ -68,6 +89,14 @@ const EstadisticasCierresAuditorias = () => {
         (hospitalFiltro.length > 0 ? hospitalFiltro.includes(a.Hospital) : true)
     );
     });
+
+    const auditoriaCerrada = (idEfector, periodo) => {
+        return cierres.some(
+          (cierre) =>
+            String(cierre.idEfector) === String(idEfector) &&
+            String(cierre.periodo) === String(periodo)
+        );
+    };
 
     const exportarPDF = async () => {
       const cardsGrid = document.querySelector('.cards-grid');
@@ -199,7 +228,7 @@ const EstadisticasCierresAuditorias = () => {
                 key={idAuditoria}
                 className="card"
                 elevation={3}
-                sx={{ p: 2, cursor: 'pointer', mb: 3 }}
+                sx={{ p: 2, cursor: 'pointer', mb: 3 , position: 'relative'  }}
                 onClick={() => navigate(`/auditorias/${idAuditoria}/detalle`)}
                 >
                 <Box display="flex" alignItems="center" mb={1}>
@@ -257,6 +286,17 @@ const EstadisticasCierresAuditorias = () => {
                     </Box>
                   </>
                 )}
+                  <Chip
+                    label={auditoriaCerrada(auditoria.idEfector, auditoria.periodo) ? 'Con cierre' : 'Sin cierre'}
+                    color={auditoriaCerrada(auditoria.idEfector, auditoria.periodo) ? 'success' : 'warning'}
+                    size="small"
+                    sx={{ 
+                      position: 'absolute', 
+                      bottom: 8, 
+                      right: 8 
+                    }}
+                    onClick={(e) => e.stopPropagation()} // evita que haga navigate al hacer clic en el chip
+                  />
               </Paper>
             );
           })}

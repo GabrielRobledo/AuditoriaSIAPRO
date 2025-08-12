@@ -23,16 +23,13 @@ const sidebar = ({ onSeleccion }) => {
             <Link to="/auditoriasParciales">Parciales</Link>
           </Menu.Item>
           <Menu.Item key="auditorias">
-            <Link to="/auditorias">Cerradas</Link>
+            <Link to="/auditorias">Finalizados</Link>
           </Menu.Item>
         </Menu.SubMenu>
         <Menu.Item key="Usuarios" icon={<BarsOutlined/>}>
            <Link to="/usuarios">Usuarios</Link>
         </Menu.Item>
         <Menu.SubMenu key="Registros" icon={<DatabaseOutlined/>} title="Registros">
-          <Menu.Item key="atenciones">
-            <Link to="/registros/atenciones">Atenciones</Link>
-          </Menu.Item>
           <Menu.Item key="beneficiarios">
             <Link to="/registros/beneficiarios">Pacientes</Link>
           </Menu.Item>
@@ -49,7 +46,24 @@ const sidebar = ({ onSeleccion }) => {
         <Menu.Item key="cierreDeAuditoria" icon={<BarsOutlined/>}>
           <Link to="/cierreDeAuditoria">Cierre Auditoria</Link> 
         </Menu.Item>
-        
+        <Menu.SubMenu key="reportes" icon={<BarsOutlined/>}  title="Reportes">
+          <Menu.Item key="reportesAuditorias">
+            <Link to="/reportes/reportesAuditorias">Dashboard Auditorias</Link>
+          </Menu.Item>
+          <Menu.Item key="reportesAsignaciones">
+            <Link to="/reportes/reportesAsignaciones">Dashboard Asignaciones</Link>
+          </Menu.Item>
+          <Menu.Item key="practicas-mas-debitadas">
+            <Link to="/reportes/practicas-mas-debitadas">Estadisticas Practicas</Link>
+          </Menu.Item>     
+        </Menu.SubMenu>
+        <Menu.Item key="novedades" icon={<BarsOutlined/>}>
+          <Link to="/novedades">Novedades</Link>
+        </Menu.Item>
+        <Menu.Item key="motivos" icon={<BarsOutlined/>}>
+          <Link to="/motivos">Motivos</Link>
+        </Menu.Item>
+
     </Menu>
   )
 }

@@ -456,7 +456,7 @@ const handleGuardarBorrador = async () => {
       icon: 'success',
       title: 'Borrador guardado correctamente',
     }).then(() => {
-      window.location.href = '/registros/atenciones'; 
+      window.location.href = '/auditoriasParciales'; 
     });
   } catch (err) {
     console.error('Error guardando borrador:', err);
@@ -600,6 +600,7 @@ const handleGuardarBorrador = async () => {
   return (
     <div>
       {tipo === "atenciones" && (
+        
     
       <div
         style={{
@@ -611,7 +612,7 @@ const handleGuardarBorrador = async () => {
         }}
       >
         {/* Lado izquierdo */}
-        <div>
+        <div style={{ display: 'flex', gap: '10px' }}> {/* Se añadió gap aquí */}
           <button
             onClick={handleEnviarRegistros}
             style={{
@@ -621,7 +622,6 @@ const handleGuardarBorrador = async () => {
               borderRadius: '6px',
               color: 'white',
               cursor: 'pointer',
-              marginRight: '10px',
               fontWeight: 'bold',
             }}
           >
@@ -643,7 +643,6 @@ const handleGuardarBorrador = async () => {
           >
             Guardar Progreso
           </button>
-
         </div>
 
         {/* Lado derecho */}

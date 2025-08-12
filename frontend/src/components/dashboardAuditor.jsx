@@ -9,7 +9,9 @@ export default function DashboardAuditor() {
   const [auditorias, setAuditorias] = useState([]);
   const [atenciones, setAtenciones] = useState([]);
   const navigate = useNavigate();
-  
+  const [cierres, setCierres] = useState([]);
+  const [novedades, setNovedades] = useState([]);
+  const [mostrarNovedades, setMostrarNovedades] = useState(true);
 
   useEffect(() => {
     fetch(`${API_URL}/api/auditorias`)
@@ -21,7 +23,19 @@ export default function DashboardAuditor() {
       .then(res => res.json())
       .then(setAtenciones)
       .catch(err => Swal.fire('Error', err.message, 'error'));
+    fetch(`${API_URL}/api/listarCierres`)
+      .then(res => res.json())
+      .then(setCierres)
+      .catch(err => Swal.fire('Error', err.message, 'error'));
   }, []);
+
+  const auditoriaCerrada = (idEfector, periodo) => {
+    return cierres.some(
+      (cierre) =>
+        String(cierre.idEfector) === String(idEfector) &&
+        String(cierre.periodo) === String(periodo)
+    );
+  };
 
   const totalDebito = auditorias.reduce((acc, a) => acc + (parseFloat(a.totalDebito) || 0), 0);
   const auditoriasRecientes = auditorias
@@ -35,8 +49,39 @@ export default function DashboardAuditor() {
     return acc;
   }, {});
 
+  
+  useEffect(() => {
+    fetch(`${API_URL}/api/novedades`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.length > 0) {
+          setNovedades(data);
+        } else {
+          setMostrarNovedades(false);
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando novedades:', err);
+        setMostrarNovedades(false);
+      });
+  }, []);
+
   return (
     <div style={containerStyle}>
+      {mostrarNovedades && novedades.length > 0 && (
+        <div style={novedadesBannerStyle}>
+          <div style={{ flex: 1 }}>
+            <strong>{novedades[0].titulo}</strong>: {novedades[0].mensaje}
+          </div>
+          <button
+            onClick={() => setMostrarNovedades(false)}
+            style={cerrarBtnStyle}
+            aria-label="Cerrar novedades"
+          >
+            ×
+          </button>
+        </div>
+      )}
       <div style={dashboardRow}>
         <div style={cardBlock}>
           <h2 style={sectionTitle}>Auditorías Cerradas</h2>
@@ -97,25 +142,37 @@ export default function DashboardAuditor() {
               <th style={thStyle}>Hospital</th>
               <th style={thStyle}>Periodo</th>
               <th style={thStyle}>Total Débito</th>
+              <th style={thStyle}>Estado</th> 
             </tr>
           </thead>
           <tbody>
-            {auditoriasRecientes.map((a, idx) => (
-              <tr
-                key={a.idAuditoria}
-                style={{
-                  backgroundColor: idx % 2 === 0 ? '#f5f5f5' : '#fff',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e3f2fd')}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#f5f5f5' : '#fff')}
-              >
-                <td style={tdStyle}>{a.idAuditoria}</td>
-                <td style={tdStyle}>{a.Hospital}</td>
-                <td style={tdStyle}>{a.periodo}</td>
-                <td style={tdStyle}>${parseFloat(a.totalDebito).toFixed(2)}</td>
-              </tr>
-            ))}
+            {auditoriasRecientes.map((a, idx) => {
+              const estaCerrada = auditoriaCerrada(a.idEfector, a.periodo);
+
+              return (
+                <tr
+                  key={a.idAuditoria}
+                  style={{
+                    backgroundColor: idx % 2 === 0 ? '#f5f5f5' : '#fff',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#e3f2fd')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = idx % 2 === 0 ? '#f5f5f5' : '#fff')}
+                >
+                  <td style={tdStyle}>{a.idAuditoria}</td>
+                  <td style={tdStyle}>{a.Hospital}</td>
+                  <td style={tdStyle}>{a.periodo}</td>
+                  <td style={tdStyle}>${parseFloat(a.totalDebito).toFixed(2)}</td>
+                  <td style={tdStyle}>
+                    {estaCerrada ? (
+                      <span style={chipStyle}>Cerrado</span>
+                    ) : (
+                      <span style={chipStyle2}>Pendiente</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -211,4 +268,51 @@ const buttonStyle = {
   borderRadius: '5px',
   cursor: 'pointer',
   transition: 'background 0.3s'
+};
+
+const chipStyle = {
+  display: 'inline-block',
+  padding: '4px 10px',
+  borderRadius: '15px',
+  backgroundColor: '#4caf50',
+  color: '#fff',
+  fontWeight: 'bold',
+  fontSize: '0.8rem',
+  userSelect: 'none'
+};
+
+const chipStyle2 = {
+  display: 'inline-block',
+  padding: '4px 10px',
+  borderRadius: '15px',
+  backgroundColor: '#f44336',
+  color: '#fff',
+  fontWeight: 'bold',
+  fontSize: '0.8rem',
+  userSelect: 'none'
+};
+
+const novedadesBannerStyle = {
+  backgroundColor: '#fffae6',
+  color: '#665c00',
+  border: '1px solid #ffecb3',
+  borderRadius: '5px',
+  padding: '12px 20px',
+  marginBottom: '20px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  fontSize: '1rem',
+  boxShadow: '0 2px 6px rgba(255, 193, 7, 0.3)',
+};
+
+const cerrarBtnStyle = {
+  background: 'transparent',
+  border: 'none',
+  fontSize: '1.4rem',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  color: '#665c00',
+  lineHeight: '1',
+  padding: '0 6px',
 };

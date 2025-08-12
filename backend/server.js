@@ -17,6 +17,11 @@ const motivosRoutes = require('./routes/motivosRoutes');
 const motivosTotalesRoutes = require('./routes/motivosTotalesRoutes');
 const cierreRoutes = require('./routes/cierreRoutes');
 const periodosRoutes = require('./routes/periodosRoutes'); 
+const nomencladorRoutes = require('./routes/nomencladorRoutes');
+const modulosRoutes = require('./routes/modulosRoutes');
+const reportesRoutes = require('./routes/reportesRoutes');
+const logsRoutes = require('./routes/logsRoutes');
+const novedadesRoutes = require('./routes/novedadesRoutes');
 
 // Middleware
 app.use(cors());
@@ -37,9 +42,14 @@ app.use('/api', motivosTotalesRoutes);
 app.use('/api/auditorias', auditoriasRoutes);
 app.use('/api', cierreRoutes);
 app.use('/api', periodosRoutes);
+app.use('/api', nomencladorRoutes);
+app.use('/api', modulosRoutes);
+app.use('/api', reportesRoutes)
+app.use('/api/logs', logsRoutes);
+app.use('/api', novedadesRoutes);
 
 // Servidor
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

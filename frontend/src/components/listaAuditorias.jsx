@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { FiEdit, FiTrash2, FiSearch, FiFileText } from 'react-icons/fi';
 import { Bar, Pie } from 'react-chartjs-2';
+import { FiMaximize } from 'react-icons/fi';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,20 +33,38 @@ export default function AuditoriasList() {
   const [auditorias, setAuditorias] = useState([]);
   const [tab, setTab] = useState('listado');
   const [motivosTotales, setMotivosTotales] = useState([]);
+  const [cierres, setCierres] = useState([]);
+  const [ampliarGrafico, setAmpliarGrafico] = useState(null); 
 
   useEffect(() => {
     fetch(`${API_URL}/api/motivosTotales`)
       .then(res => res.json())
       .then(data => setMotivosTotales(data))
       .catch(err => Swal.fire('Error', err.message, 'error'));
-    fetch(`${API_URL}/api/auditorias`)
+    fetch(`${API_URL}/api/listarCierres`)
       .then(res => res.json())
       .then(data => {
-        const sorted = data.sort((a,b)=>b.idAuditoria - a.idAuditoria);
-        setAuditorias(sorted);
+        setCierres(data);
+        console.log('cierres:', data); // <- Agregá esto
       })
-      .catch(err => Swal.fire('Error', err.message, 'error'));
+    .catch(err => Swal.fire('Error', err.message, 'error'));
+    fetch(`${API_URL}/api/auditorias`)
+    .then(res => res.json())
+    .then(data => {
+      const sorted = data.sort((a,b)=>b.idAuditoria - a.idAuditoria);
+      setAuditorias(sorted);
+      console.log('auditorias:', sorted); // <- Agregá esto
+    })
   }, []);
+
+  const auditoriaCerrada = (idEfector, periodo) => {
+    return cierres.some(
+      (cierre) =>
+        String(cierre.idEfector) === String(idEfector) &&
+        String(cierre.periodo) === String(periodo)
+    );
+  };
+
 
   const navigate = useNavigate();
   const eliminar = id => {
@@ -87,14 +106,89 @@ export default function AuditoriasList() {
       cell: info => `$${parseFloat(info.getValue()||0).toFixed(2)}`,
     },
     {
-      id: 'acciones', header: 'Acciones', cell: ({row}) => (
-        <div style={{ display:'flex', justifyContent:'center' }}>
-          <button onClick={e=>{e.stopPropagation(); navigate(`/auditorias/${row.original.idAuditoria}`)}} style={iconButtonStyle('#1976d2')}><FiEdit/></button>
-          <button onClick={e=>{e.stopPropagation(); eliminar(row.original.idAuditoria)}} style={iconButtonStyle('#d32f2f')}><FiTrash2/></button>
-        </div>
-      )
+      id: 'acciones',
+      header: 'Acciones',
+      cell: ({ row }) => {
+        const auditoria = row.original;
+        const estaCerrada = auditoriaCerrada(auditoria.idEfector, auditoria.periodo); // 👈 Evaluar aquí, no antes
+
+        return (
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <button
+              onClick={e => {
+                if (estaCerrada) return;
+                e.stopPropagation();
+                navigate(`/auditorias/${auditoria.idAuditoria}`);
+              }}
+              style={{
+                ...iconButtonStyle(estaCerrada ? '#aaa' : '#1976d2'),
+                cursor: estaCerrada ? 'not-allowed' : 'pointer',
+              }}
+              title={estaCerrada ? 'Auditoría cerrada' : 'Editar auditoría'}
+            >
+              <FiEdit />
+            </button>
+            <button
+              onClick={e => {
+                if (estaCerrada) return;
+                e.stopPropagation();
+                eliminar(auditoria.idAuditoria);
+              }}
+              style={{
+                ...iconButtonStyle(estaCerrada ? '#aaa' : '#d32f2f'),
+                cursor: estaCerrada ? 'not-allowed' : 'pointer',
+              }}
+              title={estaCerrada ? 'Auditoría cerrada' : 'Eliminar auditoría'}
+            >
+              <FiTrash2 />
+            </button>
+          </div>
+        );
+      }
+    },
+    {
+      id: 'estado',
+      header: 'Estado',
+      cell: ({ row }) => {
+        const auditoria = row.original;
+        const estaCerrada = auditoriaCerrada(auditoria.idEfector, auditoria.periodo);
+        return estaCerrada ? (
+          <span style={{
+            display: 'inline-block',
+            padding: '4px 10px',
+            borderRadius: '15px',
+            backgroundColor: '#4caf50',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '0.85rem',
+            userSelect: 'none',
+            textAlign: 'center',
+            width: '70px',
+          }}>
+            Cerrado
+          </span>
+        ) : (
+          <span style={{
+            display: 'inline-block',
+            padding: '4px 10px',
+            borderRadius: '15px',
+            backgroundColor: '#f44336',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '0.85rem',
+            userSelect: 'none',
+            textAlign: 'center',
+            width: '80px',
+          }}>
+            Pendiente
+          </span>
+        );
+      }
     }
-  ], [navigate]);
+
+
+
+  ], [navigate, cierres]);
 
   const [globalFilter, setGlobalFilter] = useState('');
   const table = useReactTable({
@@ -108,6 +202,8 @@ export default function AuditoriasList() {
     getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: 'includesString'
   });
+
+ 
 
   // Exportar Excel
   const exportExcel = () => {
@@ -132,7 +228,7 @@ export default function AuditoriasList() {
 
   return (
     <div style={{padding:'2rem', position:'relative', minHeight:'100vh'}}>
-      <h2>Auditorías Cerradas</h2>
+      <h2>Auditorías finalizadas</h2>
       <div style={{display:'flex', gap:'1rem', alignItems:'center', marginBottom:'1rem'}}>
         <div style={{position:'relative', flex:'0 0 350px'}}>
           <FiSearch style={{position:'absolute', top:'50%', left:'10px', transform:'translateY(-50%)', color:'#1976d2'}}/>
@@ -231,21 +327,208 @@ export default function AuditoriasList() {
         <div>
           <h3>Visualización de Datos</h3>
           <div style={{display:'flex', flexWrap:'wrap', justifyContent:'center', gap:'2rem', marginTop:'2rem'}}>
-            <div style={{flex:'1 1 600px', maxWidth:'800px'}}>
-              <Bar data={{ labels:auditorias.map(a=>a.Hospital),
-                datasets:[
-                  {label:'Total Débito', data:auditorias.map(a=>a.totalDebito), backgroundColor:'rgba(25,118,210,0.7)', borderColor:'rgba(25,118,210,1)', borderWidth:1},
-                  {label:'Total Facturado', data:auditorias.map(a=>a.totalFacturado), backgroundColor:'rgba(76,175,80,0.7)', borderColor:'rgba(76,175,80,1)', borderWidth:1},
-                ]}} options={{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}, title:{display:true, text:'Comparativa: Débito vs Facturación'}}}} height={300} />
+            <div style={{ position: 'relative', flex: '1 1 600px', maxWidth: '800px' }}>
+              <button 
+                onClick={() => setAmpliarGrafico('barra')} 
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  background: 'rgba(0,0,0,0.1)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  zIndex: 10,
+                }}
+                title="Ampliar gráfico"
+              >
+                <FiMaximize size={20} />
+              </button>
+              <Bar
+                data={{
+                  labels: auditorias.map(a => a.Hospital),
+                  datasets: [
+                    { label: 'Total Débito', data: auditorias.map(a => a.totalDebito), backgroundColor: 'rgba(25,118,210,0.7)', borderColor: 'rgba(25,118,210,1)', borderWidth: 1 },
+                    { label: 'Total Facturado', data: auditorias.map(a => a.totalFacturado), backgroundColor: 'rgba(76,175,80,0.7)', borderColor: 'rgba(76,175,80,1)', borderWidth: 1 },
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Comparativa: Débito vs Facturación' },
+                  },
+                }}
+                height={300}
+              />
             </div>
-            <div style={{flex:'1 1 500px', maxWidth:'600px'}}>
-              <Pie data={{labels:motivosTotales.map(m=>m.motivo), datasets:[{label:'Cantidad de Auditorías', data:motivosTotales.map(m=>m.cantidad), backgroundColor:motivosTotales.map(()=>`hsl(${Math.random()*360},70%,60%)`)}]}} options={{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}, title:{display:true,text:'Distribución por Motivos'}}}} height={250} />
+
+            <div style={{ position: 'relative', flex: '1 1 500px', maxWidth: '600px' }}>
+              <button 
+                onClick={() => setAmpliarGrafico('pie')} 
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  background: 'rgba(0,0,0,0.1)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  zIndex: 10,
+                }}
+                title="Ampliar gráfico"
+              >
+                <FiMaximize size={20} />
+              </button>
+              <Pie
+                data={{
+                  labels: motivosTotales.map(m => m.motivo),
+                  datasets: [
+                    { label: 'Cantidad de Auditorías', data: motivosTotales.map(m => m.cantidad), backgroundColor: motivosTotales.map(() => `hsl(${Math.random() * 360},70%,60%)`) }
+                  ],
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Distribución por Motivos' },
+                  },
+                }}
+                height={250}
+              />
             </div>
+
           </div>
         </div>
       )}
 
       <button onClick={()=>navigate('/dashboardAuditor')} style={{position:'absolute',bottom:'20px',left:'20px',padding:'10px 20px',backgroundColor:'#1976d2',color:'#fff',border:'none',borderRadius:'5px',cursor:'pointer'}}>← Volver al Dashboard</button>
+      {ampliarGrafico && (
+        <div
+          onClick={() => setAmpliarGrafico(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'opacity 0.3s ease-in-out',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '10px',
+              padding: '1.5rem',
+              position: 'relative',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              width: ampliarGrafico === 'barra' ? '80vw' : '60vw',
+              height: ampliarGrafico === 'barra' ? '65vh' : '55vh',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            {/* Botón cerrar */}
+            <button
+              onClick={() => setAmpliarGrafico(null)}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                backgroundColor: '#f44336',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '5px',
+                padding: '6px 12px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+              }}
+            >
+              Cerrar ✖
+            </button>
+
+            {/* Título */}
+            <h3 style={{ textAlign: 'center', marginBottom: '1rem', color: '#1976d2' }}>
+              {ampliarGrafico === 'barra' ? 'Gráfico de Débito vs Facturación' : 'Gráfico de Distribución por Motivos'}
+            </h3>
+
+            {/* Contenido del gráfico */}
+            <div style={{ flex: 1 }}>
+              {ampliarGrafico === 'barra' && (
+                <Bar
+                  data={{
+                    labels: auditorias.map((a) => a.Hospital),
+                    datasets: [
+                      {
+                        label: 'Total Débito',
+                        data: auditorias.map((a) => a.totalDebito),
+                        backgroundColor: 'rgba(25,118,210,0.7)',
+                        borderColor: 'rgba(25,118,210,1)',
+                        borderWidth: 1,
+                      },
+                      {
+                        label: 'Total Facturado',
+                        data: auditorias.map((a) => a.totalFacturado),
+                        backgroundColor: 'rgba(76,175,80,0.7)',
+                        borderColor: 'rgba(76,175,80,1)',
+                        borderWidth: 1,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { position: 'top' },
+                      title: { display: false },
+                    },
+                  }}
+                />
+              )}
+              {ampliarGrafico === 'pie' && (
+                <Pie
+                  data={{
+                    labels: motivosTotales.map((m) => m.motivo),
+                    datasets: [
+                      {
+                        label: 'Cantidad de Auditorías',
+                        data: motivosTotales.map((m) => m.cantidad),
+                        backgroundColor: motivosTotales.map(
+                          () => `hsl(${Math.random() * 360},70%,60%)`
+                        ),
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { position: 'bottom' },
+                      title: { display: false },
+                    },
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

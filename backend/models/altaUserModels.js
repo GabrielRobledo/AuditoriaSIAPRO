@@ -44,13 +44,28 @@ const restoreUser = (id, callback) => {
   db.query(sql, [id], callback);
 };
 
+const getUserById = (id, callback) => {
+  const sql = 'SELECT * FROM usuarios WHERE idUsuario = ? AND delete_add IS NULL';
+  db.query(sql, [id], (err, results) => {
+    if (err) return callback(err);
+    callback(null, results[0]);
+  });
+};
+
+const updatePassword = (id, nuevaContraseña, callback) => {
+  const sql = 'UPDATE usuarios SET contraseña = ? WHERE idUsuario = ? AND delete_add IS NULL';
+  db.query(sql, [nuevaContraseña, id], callback);
+};
+
 module.exports = {
   createUser,
   getUserByUsername,
   getAllUsers,
   updateUser,
   deleteUser,
-  restoreUser 
+  restoreUser,
+  getUserById,
+  updatePassword,
 };
 
 

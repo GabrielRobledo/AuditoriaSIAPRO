@@ -1,5 +1,5 @@
 import { Layout, Button, theme, Input, Tooltip, Grid, Avatar, Dropdown, Menu } from 'antd';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from './sidebar';
 import '../styles/navbar.css';
@@ -16,6 +16,7 @@ const { useBreakpoint } = Grid;
 
 const BasicLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState({ nombre: '', rol: '' });
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -50,6 +51,17 @@ const BasicLayout = () => {
       </Menu.Item>
     </Menu>
   );
+
+  localStorage.setItem('user', JSON.stringify({ nombre: 'Juan Pérez', rol: 'Administrador' }));
+ 
+
+    useEffect(() => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    }, []);
+    
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -121,13 +133,19 @@ const BasicLayout = () => {
           </div>
 
           {/* Avatar + Dropdown */}
-          <Dropdown overlay={userMenu} placement="bottomRight" trigger={['click']}>
-            <Avatar
-              size="large"
-              icon={<UserOutlined />}
-              style={{ cursor: 'pointer', backgroundColor: '#87d068' }}
-            />
-          </Dropdown>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+            <div style={{ textAlign: 'right', marginRight: '8px', lineHeight: '1.5' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '20px' }}>{user.nombre}</div>
+              <div style={{ fontSize: '16px', color: 'gray', marginTop: '-4px' }}>{user.rol}</div>
+            </div>
+            <Dropdown overlay={userMenu} placement="bottomRight" trigger={['click']}>
+              <Avatar
+                size="large"
+                icon={<UserOutlined />}
+                style={{ cursor: 'pointer', backgroundColor: '#87d068' }}
+              />
+            </Dropdown>
+          </div>
         </Header>
 
         <Content style={{ margin: '24px 0', background: '#fff', padding: 24 }}>

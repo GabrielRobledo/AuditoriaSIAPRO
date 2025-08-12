@@ -7,20 +7,19 @@ import {
   Autocomplete,
   TextField,
   Grid,
-  Card,
-  CardHeader,
-  CardContent,
-  List,
-  ListItemText,
-  ListItemButton,
-  IconButton,
-  Button,
+  Box,
   Tabs,
   Tab,
-  Box,
-  Badge
+  Stack,
+  Chip,
+  Tooltip,
+  Button,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemText,
 } from '@mui/material';
-import { ArrowForward, ArrowBack, Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add, Remove } from '@mui/icons-material';
 import API_URL from '../config'
 
 const AsignarHospitales = () => {
@@ -222,144 +221,103 @@ const AsignarHospitales = () => {
           {auditorId && (
             <Grid container spacing={3} sx={{ mb: 4 }}>
               <Grid item xs={12} sm={6}>
-                <Card elevation={6}>
-                  <CardHeader
-                    title="Hospitales disponibles"
-                    sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}
-                    titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
-                    action={<Badge badgeContent={disponibles.length} color="secondary" />}
-                  />
-                  <CardContent sx={{ maxHeight: 480, overflowY: 'auto', p: 0 }}>
-                    <List dense>
-                      {disponibles.map(e => (
-                      <ListItemButton
-                        key={e.idEfector}
-                        onClick={() => asignar(e.idEfector)}
-                        sx={{
-                          px: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          flexWrap: 'nowrap',
-                          gap: 1,
-                          '&:hover': {
-                            bgcolor: 'primary.light',
-                            color: 'white',
-                          },
-                        }}
-                      >
-                        <ListItemText
-                          primary={
-                            <Typography noWrap title={e.RazonSocial}>
-                              {e.RazonSocial}
-                            </Typography>
-                          }
-                          sx={{ flexGrow: 1, overflow: 'hidden' }}
-                        />
-                        <Box sx={{ flexShrink: 0 }}>
-                          <ArrowForward />
-                        </Box>
-                      </ListItemButton>
-
-                      ))}
-                    </List>
-                  </CardContent>
-                </Card>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 'bold',
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    p: 1,
+                    borderRadius: 1
+                  }}
+                >
+                  Hospitales disponibles ({disponibles.length})
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  flexWrap="wrap"
+                  sx={{ maxHeight: 480, overflowY: 'auto' }}
+                >
+                  {disponibles.map(h => (
+                    <Tooltip key={h.idEfector} title={h.RazonSocial}>
+                      <Chip
+                        label={h.RazonSocial.length > 20 ? `${h.RazonSocial.slice(0, 20)}...` : h.RazonSocial}
+                        onClick={() => asignar(h.idEfector)}
+                        deleteIcon={<Add />}
+                        onDelete={() => asignar(h.idEfector)}
+                        sx={{ maxWidth: 220, cursor: 'pointer' }}
+                      />
+                    </Tooltip>
+                  ))}
+                </Stack>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <Card elevation={6}>
-                  <CardHeader
-                    title="Hospitales asignados"
-                    sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}
-                    titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
-                    action={<Badge badgeContent={asignados.length} color="secondary" />}
-                  />
-                  <CardContent sx={{ maxHeight: 480, overflowY: 'auto', p: 0 }}>
-                    <List dense>
-                      {asignados.map(e => (
-                      <ListItemButton
-                        key={e.idEfector}
-                        onClick={() => quitar(e.idEfector)}
-                        sx={{
-                          px: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          flexWrap: 'nowrap',
-                          gap: 1,
-                          '&:hover': {
-                            bgcolor: 'primary.light',
-                            color: 'white',
-                          },
-                        }}
-                      >
-                        <ListItemText
-                          primary={
-                            <Typography noWrap title={e.RazonSocial}>
-                              {e.RazonSocial}
-                            </Typography>
-                          }
-                          sx={{ flexGrow: 1, overflow: 'hidden' }}
-                        />
-                        <Box sx={{ flexShrink: 0 }}>
-                          <ArrowBack />
-                        </Box>
-                      </ListItemButton>
-
-                      ))}
-                    </List>
-                  </CardContent>
-                </Card>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: 'bold',
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    p: 1,
+                    borderRadius: 1
+                  }}
+                >
+                  Hospitales asignados ({asignados.length})
+                </Typography>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  flexWrap="wrap"
+                  sx={{ maxHeight: 480, overflowY: 'auto' }}
+                >
+                  {asignados.map(h => (
+                    <Tooltip key={h.idEfector} title={h.RazonSocial}>
+                      <Chip
+                        label={h.RazonSocial.length > 20 ? `${h.RazonSocial.slice(0, 20)}...` : h.RazonSocial}
+                        onClick={() => quitar(h.idEfector)}
+                        deleteIcon={<Remove />}
+                        onDelete={() => quitar(h.idEfector)}
+                        color="secondary"
+                        sx={{ maxWidth: 220, cursor: 'pointer' }}
+                      />
+                    </Tooltip>
+                  ))}
+                </Stack>
               </Grid>
             </Grid>
           )}
 
-          <Box textAlign="center">
+          <Box display="flex" justifyContent="center" mt={4}>
             <Button
               variant="contained"
               color="primary"
               onClick={handleSubmit}
-              sx={{ mt: 2, minWidth: 180, fontWeight: 'bold' }}
+              disabled={!auditorId || asignados.length === 0}
             >
-              Guardar Asignación
+              Guardar Asignaciones
             </Button>
           </Box>
         </>
       )}
 
       {tabIndex === 1 && (
-        <Card elevation={6} sx={{ mt: 2 }}>
-          <CardHeader
-            title="Asignaciones Existentes"
-            sx={{ bgcolor: 'primary.main', color: 'primary.contrastText' }}
-            titleTypographyProps={{ variant: 'h5', fontWeight: 'bold' }}
-          />
-          <CardContent sx={{ p: 0 }}>
-            <List>
-              {asignacionesTotales.map((a, i) => (
-                <ListItemButton
-                  key={i}
-                  divider
-                  sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <ListItemText
-                    primary={a.nombre}
-                    secondary={`Hospitales: ${a.hospitales.join(', ')}`}
-                    sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}
-                  />
-                  <IconButton
-                    edge="end"
-                    color="error"
-                    onClick={() => eliminarAsignacion(a.idUsuario)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemButton>
-              ))}
-            </List>
-          </CardContent>
-        </Card>
+        <List sx={{ maxHeight: 600, overflowY: 'auto' }}>
+          {asignacionesTotales.map((grupo) => (
+            <ListItemButton key={grupo.idUsuario} sx={{ mb: 1 }}>
+              <ListItemText
+                primary={grupo.nombre}
+                secondary={grupo.hospitales.join(', ')}
+              />
+              <IconButton edge="end" onClick={() => eliminarAsignacion(grupo.idUsuario)}>
+                <DeleteIcon />
+              </IconButton>
+            </ListItemButton>
+          ))}
+        </List>
       )}
     </Container>
   );

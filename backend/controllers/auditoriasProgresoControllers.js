@@ -76,6 +76,24 @@ const listarBorradores = async (req, res) => {
   }
 };
 
+const updateByIdSerial = async (req, res) => {
+  const idSerial = parseInt(req.params.idSerial, 10);
+  const { datos } = req.body;
+
+  if (!idSerial || !datos) {
+    return res.status(400).json({ error: 'Faltan datos para actualizar' });
+  }
+
+  try {
+    await model.updateOnlyData(idSerial, datos);
+    res.json({ message: 'Actualizado correctamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar el borrador' });
+  }
+};
+
+
 
 
 module.exports = {
@@ -83,5 +101,6 @@ module.exports = {
   getDraft,
   deleteDraft,
   listarBorradores,
-  deleteProgreso
+  deleteProgreso,
+  updateByIdSerial
 };

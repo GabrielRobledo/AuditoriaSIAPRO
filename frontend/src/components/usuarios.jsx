@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { FiEdit, FiTrash2, FiRotateCcw } from 'react-icons/fi';
 import API_URL from '../config';
@@ -8,6 +9,7 @@ const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [mostrarEliminados, setMostrarEliminados] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     cargarUsuarios();
@@ -16,8 +18,33 @@ const Usuarios = () => {
   const cargarUsuarios = () => {
     axios
       .get(`${API_URL}/api/auth/usuarios?eliminados=${mostrarEliminados}`)
-      .then((res) => setUsuarios(res.data))
+      .then((res) => {
+        const usuariosConAuditorias = res.data;
+        // Cargar la cantidad de auditorías para cada usuario
+        obtenerAuditorias(usuariosConAuditorias);
+      })
       .catch((err) => console.error('Error al obtener usuarios:', err));
+  };
+
+  const obtenerAuditorias = (usuariosConAuditorias) => {
+    // Obtener la cantidad de auditorías por cada usuario
+    axios
+      .get(`${API_URL}/api/count-auditorias`)
+      .then((res) => {
+        const auditoriasCount = res.data.reduce((acc, { idUsuario, auditoriasCount }) => {
+          acc[idUsuario] = auditoriasCount; // Guardamos el número de auditorías por idUsuario
+          return acc;
+        }, {});
+
+        // Actualizamos cada usuario con su cantidad de auditorías
+        const usuariosActualizados = usuariosConAuditorias.map((user) => ({
+          ...user,
+          auditoriasCount: auditoriasCount[user.idUsuario] || 0, // Si no hay auditorías, se asigna 0
+        }));
+
+        setUsuarios(usuariosActualizados);
+      })
+      .catch((err) => console.error('Error al obtener auditorías:', err));
   };
 
   const handleDelete = (id) => {
@@ -99,24 +126,20 @@ const Usuarios = () => {
     <div style={{ maxWidth: '1000px', margin: 'auto', padding: '2rem' }}>
       <h2 style={{ marginBottom: '1rem' }}>Usuarios</h2>
 
-      <label style={{ marginBottom: '1rem', display: 'inline-block', cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          checked={mostrarEliminados}
-          onChange={() => setMostrarEliminados(!mostrarEliminados)}
-          style={{ marginRight: '8px' }}
-        />
-        Mostrar eliminados
-      </label>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <label className="custom-checkbox">
+          <input
+            type="checkbox"
+            checked={mostrarEliminados}
+            onChange={() => setMostrarEliminados(!mostrarEliminados)}
+          />
+          <span className="checkbox-span"></span>
+          Mostrar eliminados
+        </label>
+      </div>
 
       {/* === Tabla moderna === */}
-      <div style={{
-        overflowX: 'auto',
-        backgroundColor: '#fff',
-        borderRadius: '10px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        marginTop: '10px'
-      }}>
+      <div style={{ overflowX: 'auto', backgroundColor: '#fff', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginTop: '10px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '750px' }}>
           <thead>
             <tr>
@@ -126,6 +149,7 @@ const Usuarios = () => {
               <th style={thStyle}>Editar</th>
               <th style={thStyle}>Eliminar</th>
               <th style={thStyle}>Restaurar</th>
+              <th style={thStyle}>Estadisticas</th>
             </tr>
           </thead>
           <tbody>
@@ -136,10 +160,16 @@ const Usuarios = () => {
                   backgroundColor: user.delete_add ? '#fce4ec' : idx % 2 === 0 ? '#f9f9f9' : '#fff',
                   opacity: user.delete_add ? 0.5 : 1,
                   transition: 'background-color 0.2s',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e3f2fd'}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = user.delete_add ? '#fce4ec' : (idx % 2 === 0 ? '#f9f9f9' : '#fff')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e3f2fd')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = user.delete_add
+                    ? '#fce4ec'
+                    : idx % 2 === 0
+                    ? '#f9f9f9'
+                    : '#fff')
+                }
               >
                 <td style={tdStyle}>{user.nombre}</td>
                 <td style={tdStyle}>{user.usuario}</td>
@@ -174,6 +204,18 @@ const Usuarios = () => {
                     />
                   )}
                 </td>
+
+                <td style={tdStyle}>
+                  {user.tipoUsuario.toLowerCase() === 'auditor' && user.auditoriasCount > 0 && (
+                    <button
+                      onClick={() => navigate(`/resumen-auditor/${user.idUsuario}`)}
+                      style={{ cursor: 'pointer', background: 'none', border: 'none', color: '#1976d2' }}
+                      title="Ver resumen"
+                    >
+                      📊
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -182,15 +224,7 @@ const Usuarios = () => {
 
       {/* === Formulario de edición === */}
       {editingUser && (
-        <div style={{
-          position: 'fixed',
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <form
             onSubmit={handleEditSubmit}
             style={{
@@ -201,7 +235,7 @@ const Usuarios = () => {
               boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '15px'
+              gap: '15px',
             }}
           >
             <h3 style={{ margin: 0, textAlign: 'center', color: '#333' }}>Editar Usuario</h3>
@@ -237,8 +271,12 @@ const Usuarios = () => {
             </select>
 
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <button type="submit" style={btnPrimary}>Guardar</button>
-              <button type="button" onClick={() => setEditingUser(null)} style={btnDanger}>Cancelar</button>
+              <button type="submit" style={btnPrimary}>
+                Guardar
+              </button>
+              <button type="button" onClick={() => setEditingUser(null)} style={btnDanger}>
+                Cancelar
+              </button>
             </div>
           </form>
         </div>
@@ -248,6 +286,8 @@ const Usuarios = () => {
 };
 
 export default Usuarios;
+
+
 
 // === Estilos reutilizables inline ===
 const thStyle = {

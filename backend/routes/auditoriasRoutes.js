@@ -8,9 +8,9 @@ router.get('/auditorias/:id', auditoriaController.obtenerAuditoria);
 router.put('/auditorias/:id', auditoriaController.editarAuditoria);
 router.delete('/auditorias/:id', auditoriaController.borrarAuditoria);
 router.get('/estado/:periodo/:idUsuario', auditoriaController.getEstadoAuditorias);
-router.get(
-  '/borradores/:idUsuario',
-  auditoriaController.getBorradores
-);
+router.get('/borradores/:idUsuario', auditoriaController.getBorradores);
+router.get('/auditorias/resumen/:idUsuario', auditoriaController.obtenerResumenAuditor);
+router.get('/count-auditorias', auditoriaController.countAuditoriasXUsuario);
+
 
 module.exports = router;

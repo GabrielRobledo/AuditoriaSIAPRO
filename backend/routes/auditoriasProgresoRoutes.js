@@ -10,6 +10,8 @@ router.delete('/auditorias-en-progreso/:idUsuario/:idEfector/:periodo', ctrl.del
 router.get('/borradores/:idUsuario', auditoriasProgresoController.listarBorradores);
 router.get('/borradores/efector/:idEfector', auditoriaController.obtenerBorradorPorEfector);
 router.delete('/borradores/:idSerial', auditoriasProgresoController.deleteProgreso);
+router.put('/auditorias-en-progreso/actualizar/:idSerial', ctrl.updateByIdSerial);
+
 
 
 module.exports = router;

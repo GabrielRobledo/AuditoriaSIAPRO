@@ -1,0 +1,88 @@
+/* Estilos generales */
+.novedades-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.novedades-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.novedades-form input,
+.novedades-form textarea {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.novedades-form button {
+  padding: 12px;
+  background-color: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.novedades-form button:disabled {
+  background-color: #aaa;
+}
+
+.novedades-form .error {
+  color: #e53e3e;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.novedades-form .success {
+  color: #48bb78;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Tabla de novedades */
+.novedades-list {
+  margin-top: 30px;
+}
+
+.novedades-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.novedades-table th, .novedades-table td {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.novedades-table th {
+  background-color: #f7fafc;
+}
+
+.edit-icon,
+.delete-icon {
+  cursor: pointer;
+  margin-left: 10px;
+  font-size: 1.2rem;
+}
+
+.edit-icon:hover {
+  color: #ed8936;
+}
+
+.delete-icon:hover {
+  color: #e53e3e;
+}
+
+.novedades-table tr:hover {
+  background-color: #f7fafc;
+}

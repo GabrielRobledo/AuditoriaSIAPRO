@@ -1,6 +1,7 @@
 const db = require('../db/conexion');
 const auditoriaModel = require('../models/auditoriaModels');
 const borradoresModel = require('../models/auditoriasProgresoModels');
+const resumenModel = require('../models/auditoriaModels');
 
 exports.crearAuditoria = (req, res) => {
   const { periodo, idUsuario, idEfector, totalDebito, detalles } = req.body;
@@ -313,5 +314,40 @@ exports.obtenerBorradorPorEfector = async (req, res) => {
 };
 
 
+exports.obtenerResumenAuditor = async (req, res) => {
+  const idUsuario = parseInt(req.params.idUsuario, 10);
+  if (isNaN(idUsuario)) return res.status(400).json({ error: 'ID inválido' });
 
+  try {
+    const auditorias = await resumenModel.getResumenPorAuditor(idUsuario);
+
+    const total = auditorias.length;
+    const ultima = auditorias[0]?.periodo || null;
+
+    const periodosUnicos = new Set(auditorias.map(a => a.periodo));
+    const promedioPorMes = periodosUnicos.size ? (total / periodosUnicos.size).toFixed(2) : 0;
+
+    res.json({
+      resumen: {
+        totalAuditorias: total,
+        ultimoPeriodo: ultima,
+        promedioPorMes
+      },
+      auditorias
+    });
+  } catch (err) {
+    console.error('Error al obtener resumen del auditor:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
+exports.countAuditoriasXUsuario = async (req, res) => {
+  try {
+    const resultados = await auditoriaModel.getCountAuditoriasXUsuario();
+    res.json(resultados);
+  } catch (err) {
+    console.error('Error al contar auditorías por usuario:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
 
