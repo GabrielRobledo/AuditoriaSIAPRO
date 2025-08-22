@@ -30,39 +30,53 @@ const hoy = new Date();
 const anio = hoy.getFullYear();
 const mes = String(hoy.getMonth() + 1).padStart(2, '0');
 const periodo = `${anio}-${mes}`;
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+const idUsuario = user?.idUsuario || null;
 
 const App = () => {
   return (
     <Routes>
       <Route path='login' element={<Login />} />
 
-      {/* Rutas protegidas */}
+      {/* Rutas protegidas generales */}
       <Route element={<RutaProtegida />}>
         <Route path="/" element={<BasicLayout />}>
+
           <Route index element={<Dashboard />} />
-          <Route path="registros/:tipo" element={<VistaRegistros />} />
-          <Route path='register' element={<RegisterForm />} />
           <Route path='dashboard' element={<Dashboard />} />
-          <Route path='dashboardAuditor' element={<DashboardAuditor />} />
-          <Route path='usuarios' element={<Usuarios />} />
+          <Route path='perfil' element={<Perfil />} />
+
+          {/* Rutas solo para ADMIN */}
+          <Route element={<RutaPorRol rolesPermitidos={['administrador']} />}>
+            <Route path='usuarios' element={<Usuarios />} />
+            <Route path='register' element={<RegisterForm />} />
+            <Route path='asignaciones' element={<AsignarHospitales />} />
+            <Route path='reportes/reportesAsignaciones' element={<EstadisticasAsignaciones />} />
+            <Route path='reportes/reportesAuditorias' element={<ReportesAuditorias />} />
+            <Route path='reportes/practicas-mas-debitadas' element={<PracticasMasDebitadas />} />
+            <Route path='resumen-auditor/:idUsuario' element={<ResumenAuditor />} />
+            <Route path='cierreDeAuditoria' element={<CierreDeAuditoria periodo={periodo} idUsuario={idUsuario} />} />
+            <Route path='novedades' element={<AdminNovedades />} />
+            <Route path='motivos' element={<Motivos />} />
+          </Route>
+
+          {/* Rutas solo para AUDITOR */}
+          <Route element={<RutaPorRol rolesPermitidos={['auditor']} />}>
+            <Route path='dashboardAuditor' element={<DashboardAuditor />} />
+            <Route path='resumen-auditor/:idUsuario' element={<ResumenAuditor />} />
+            <Route path='auditoriasParciales' element={<HospConBorradorCards />} />
+            <Route path='borradores/tabla/:idEfector' element={<TablaBorradores />} />
+          </Route>
+
+          {/* Rutas compartidas */}
           <Route path='auditorias' element={<AuditoriasList />} />
           <Route path='auditorias/:id' element={<VistaRegistros editarAuditoria={true} />} />
-          <Route path='asignaciones' element={<AsignarHospitales />} />
-          <Route path='busqueda' element={<ResultadosBusqueda />} />
-          <Route path='perfil' element={<Perfil />} />
           <Route path='auditorias/:id/detalle' element={<AuditoriaDetalle />} />
-          <Route path='auditoriasParciales' element={<HospConBorradorCards />} />
-          <Route path='borradores/tabla/:idEfector' element={<TablaBorradores />} />
+          <Route path='registros/:tipo' element={<VistaRegistros />} />
+          <Route path='busqueda' element={<ResultadosBusqueda />} />
           <Route path='estadisticasCierres' element={<EstadisticasCierresAuditorias />} />
-          <Route path='cierreDeAuditoria' element={<CierreDeAuditoria periodo={periodo} idUsuario={1} />} />
-          <Route path='resumen-auditor/:idUsuario' element={<ResumenAuditor />} />
-          <Route path='reportes/reportesAuditorias' element={<ReportesAuditorias />} />
-          <Route path='reportes/reportesAsignaciones' element={<EstadisticasAsignaciones />} />
-          <Route path='reportes/practicas-mas-debitadas' element={<PracticasMasDebitadas />} />
-          <Route path='novedades' element={<AdminNovedades />} />
-          <Route path='motivos' element={<Motivos />} />
-          
-          {/* Rutas por rol */}
+ 
+
         </Route>
       </Route>
     </Routes>

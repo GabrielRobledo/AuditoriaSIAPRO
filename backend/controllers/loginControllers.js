@@ -33,9 +33,18 @@ const login = (req, res) => {
         nombre: user.nombre,
         usuario: user.usuario,
         idTipoUsuario: user.idTipoUsuario
-      }, 'tu_secreto_jwt', { expiresIn: '2h' });
+      }, 'tu_secreto_jwt', { expiresIn: '1h' });
 
-      res.json({ msg: 'Login exitoso', token, user });
+      const userResponse = {
+        idUsuario: user.idUsuario,
+        nombre: user.nombre,
+        usuario: user.usuario,
+        idTipoUsuario: user.idTipoUsuario,
+        rol: user.rol ? user.rol.toLowerCase().trim() : 'invitado',
+      };
+
+      res.json({ msg: 'Login exitoso', token, user: userResponse });
+
 
       // 📝 Registrar log de inicio de sesión
       LogModel.crearLog({

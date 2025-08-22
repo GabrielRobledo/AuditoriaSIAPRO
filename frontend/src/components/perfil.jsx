@@ -37,16 +37,15 @@ const Perfil = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [cambiandoPassword, setCambiandoPassword] = useState(false);
-
-  const usuario = {
-    id: 1, // Este ID debería venir del token o contexto
-    nombre: 'Gabriel Robledo',
-    correo: 'gabriel.robledo@example.com',
-    rol: 'Administrador',
-    telefono: '+54 9 11 2345 6789',
+  const [user, setUser] = useState({
+    nombre: '',
+    usuario: '',
+    rol: '',
+    idUsuario: null,
+    telefono: '',
     imagen: null,
-    ultimoAcceso: '24/07/2025 14:32',
-  };
+    ultimoAcceso: '',
+  });
 
   const obtenerIniciales = (nombre) => {
     if (!nombre) return '';
@@ -56,24 +55,22 @@ const Perfil = () => {
   };
 
   useEffect(() => {
-    const cargarLogs = async () => {
-      try {
-        const data = await obtenerLogs(usuario.id);
-        console.log('Logs recibidos:', data);
-        setLogs(data);
-      } catch (error) {
-        message.error('Error al cargar los logs');
-      }
-    };
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUser(parsedUser);
 
-    cargarLogs();
-  }, [usuario.id]);
+      // Cargar logs
+      obtenerLogs(parsedUser.idUsuario)
+        .then((data) => setLogs(data))
+        .catch(() => message.error('Error al cargar los logs'));
+    }
+  }, []);
 
   const cambiarPassword = async (valores) => {
     setCambiandoPassword(true);
     try {
-      const token = localStorage.getItem('token'); // Si usás JWT
-      await cambiarPasswordService(usuario.id, {
+      await cambiarPasswordService(user.idUsuario, {
         actual: valores.actual,
         nueva: valores.nueva,
       });
@@ -106,15 +103,14 @@ const Perfil = () => {
             <Button type="default" onClick={() => setModalVisible(true)}>
               Cambiar contraseña
             </Button>
-            <Button type="primary">Editar perfil</Button>
           </div>
         }
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center' }}>
           <Avatar
             size={100}
-            icon={!usuario.imagen && <UserOutlined />}
-            src={usuario.imagen}
+            icon={!user.imagen && <UserOutlined />}
+            src={user.imagen}
             style={{
               backgroundColor: '#87d068',
               fontSize: 32,
@@ -123,20 +119,20 @@ const Perfil = () => {
               justifyContent: 'center',
             }}
           >
-            {!usuario.imagen && obtenerIniciales(usuario.nombre)}
+            {!user.imagen && obtenerIniciales(user.nombre)}
           </Avatar>
 
           <Descriptions column={1} size="small" style={{ flex: 1 }}>
-            <Descriptions.Item label="Nombre">{usuario.nombre}</Descriptions.Item>
-            <Descriptions.Item label="Correo">{usuario.correo}</Descriptions.Item>
-            <Descriptions.Item label="Teléfono">{usuario.telefono}</Descriptions.Item>
-            <Descriptions.Item label="Rol">{usuario.rol}</Descriptions.Item>
+            <Descriptions.Item label="Nombre">{user.nombre}</Descriptions.Item>
+            <Descriptions.Item label="Correo">{user.usuario}</Descriptions.Item>
+            <Descriptions.Item label="Teléfono">{user.telefono || 'No disponible'}</Descriptions.Item>
+            <Descriptions.Item label="Rol">{user.rol}</Descriptions.Item>
           </Descriptions>
         </div>
 
         <Divider />
         <Descriptions column={1} size="small">
-          <Descriptions.Item label="Último acceso">{usuario.ultimoAcceso}</Descriptions.Item>
+          <Descriptions.Item label="Último acceso">{user.ultimoAcceso || 'No disponible'}</Descriptions.Item>
         </Descriptions>
 
         <Divider orientation="left">Historial de actividad</Divider>

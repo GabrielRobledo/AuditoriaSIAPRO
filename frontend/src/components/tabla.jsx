@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useUser } from './contextUsers';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
@@ -11,7 +12,9 @@ import {
 } from "@tanstack/react-table";
 import API_URL from "../config";
 
+
 const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
+  const { user } = useUser();
   const [columnFilters, setColumnFilters] = useState([]);
   const [sorting, setSorting] = useState([]);
   const [pageIndex, setPageIndex] = useState(0);
@@ -20,9 +23,11 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [checkedRows, setCheckedRows] = useState({});
   const [motivos, setMotivos] = useState([]);
+  // ...sin efectoresAsignados...
   const pageSize = 30;
   const navigate = useNavigate();
   const [hayCambios, setHayCambios] = useState(false);
+  // ...sin useEffect de efectoresAsignados...
 
   
   useEffect(() => {
@@ -291,6 +296,11 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
 }, [datos, inputValues, motivosValues, tipo, checkedRows, editarAuditoriaId]);
 
 
+
+
+  // Usar los datos originales sin filtrar por efectores asignados
+  const datosFiltrados = datos;
+
   const table = useReactTable({
     data: Array.isArray(datos) ? datos : [],
     columns,
@@ -335,30 +345,30 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
   }, [columnFilters]);
 
   useEffect(() => {
-  const idUsuario = 2; // 🔁 Deberías obtener esto desde contexto de usuario o props
-  const idEfector = datos[0]?.idEfector;
-  const periodo = datos[0]?.periodo;
+    const idUsuario = user?.idUsuario;
+    const idEfector = datos[0]?.idEfector;
+    const periodo = datos[0]?.periodo;
 
-  if (!editarAuditoriaId && idUsuario && idEfector && periodo) {
-    fetch(`${API_URL}/api/auditorias-en-progreso/${idUsuario}/${idEfector}/${periodo}`)
-      .then((res) => {
-        if (res.status === 404) {
-          console.log('No hay borrador guardado');
-          return null;
-        }
-        return res.json();
-      })
-      .then((draft) => {
-        if (draft && Array.isArray(draft)) {
-          console.log('Cargando borrador desde el backend...');
-          setDatos(draft);
-        }
-      })
-      .catch((err) => {
-        console.error('Error al recuperar borrador:', err);
-      });
-  }
-}, [editarAuditoriaId, datos]);
+    if (!editarAuditoriaId && idUsuario && idEfector && periodo) {
+      fetch(`${API_URL}/api/auditorias-en-progreso/${idUsuario}/${idEfector}/${periodo}`)
+        .then((res) => {
+          if (res.status === 404) {
+            console.log('No hay borrador guardado');
+            return null;
+          }
+          return res.json();
+        })
+        .then((draft) => {
+          if (draft && Array.isArray(draft)) {
+            console.log('Cargando borrador desde el backend...');
+            setDatos(draft);
+          }
+        })
+        .catch((err) => {
+          console.error('Error al recuperar borrador:', err);
+        });
+    }
+  }, [editarAuditoriaId, datos, user]);
 
 
   const totalDebito = useMemo(() => {
@@ -406,7 +416,7 @@ const TablaConFiltro = ({ datos, tipo, setDatos, editarAuditoriaId }) => {
     setPageIndex(0);
   };
 
-const handleGuardarBorrador = async () => {
+  const handleGuardarBorrador = async () => {
   const registros = filteredRows.map((row) => {
     const original = row.original;
     const rowKey = original.idAtencion;
@@ -423,7 +433,7 @@ const handleGuardarBorrador = async () => {
 
   const periodo = registros[0]?.periodo || new Date().toISOString().slice(0, 7);
   const idEfector = registros[0]?.idEfector || 0;
-  const idUsuario = 2;
+  const idUsuario = user?.idUsuario;
 
   try {
     // Verificamos si ya existe un progreso guardado
@@ -498,7 +508,7 @@ const handleGuardarBorrador = async () => {
     });
 
     const periodo = registrosProcesados[0]?.periodo || new Date().toISOString().slice(0, 7);
-    const idUsuario = 2; // cambiar por usuario real
+    const idUsuario = user?.idUsuario;
     const idEfector = registrosProcesados[0]?.idEfector || 0;
     const totalDebitoFinal = registrosProcesados.reduce((acc, r) => acc + parseFloat(r.debito), 0);
 

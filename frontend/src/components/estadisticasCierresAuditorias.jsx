@@ -42,6 +42,10 @@ const EstadisticasCierresAuditorias = () => {
   const [cierres, setCierres] = useState([]);
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem('user'));
+  const userId = user?.idUsuario;
+  const userRol = user?.rol.toLowerCase().trim();
+
   useEffect(() => {
     fetch(`${API_URL}/api/listarCierres`)
       .then(res => {
@@ -84,10 +88,11 @@ const EstadisticasCierresAuditorias = () => {
 
   // Filtrar por periodo y hospital
     const auditoriasFiltradas = auditorias.filter(a => {
-    return (
-        (periodoFiltro ? a.periodo === periodoFiltro : true) &&
-        (hospitalFiltro.length > 0 ? hospitalFiltro.includes(a.Hospital) : true)
-    );
+      const coincidePeriodo = periodoFiltro ? a.periodo === periodoFiltro : true;
+      const coincideHospital = hospitalFiltro.length > 0 ? hospitalFiltro.includes(a.Hospital) : true;
+      const coincideUsuario = userRol === 'administrador' ? true : String(a.idUsuario) === String(userId);
+
+      return coincidePeriodo && coincideHospital && coincideUsuario;
     });
 
     const auditoriaCerrada = (idEfector, periodo) => {

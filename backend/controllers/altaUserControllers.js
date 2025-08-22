@@ -194,6 +194,44 @@ const cambiarPassword = (req, res) => {
   });
 };
 
+const cambiarPasswordAdmin = (req, res) => {
+  const id = req.params.id;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ msg: 'La nueva contraseña es requerida' });
+  }
+
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
+    if (err) {
+      console.error('Error al encriptar contraseña:', err);
+      return res.status(500).json({ msg: 'Error al procesar la contraseña' });
+    }
+
+    Usuario.updatePassword(id, hashedPassword, (err, result) => {
+      if (err) {
+        console.error('Error al actualizar contraseña:', err);
+        return res.status(500).json({ msg: 'Error al cambiar la contraseña' });
+      }
+
+      res.json({ msg: 'Contraseña actualizada con éxito' });
+    });
+  });
+};
+
+const getUserById = (req, res) => {
+  const id = req.params.id;
+  Usuario.getUserById(id, (err, user) => {
+    if (err) {
+      console.error('Error al obtener usuario:', err);
+      return res.status(500).json({ msg: 'Error del servidor' });
+    }
+    if (!user) {
+      return res.status(404).json({ msg: 'Usuario no encontrado' });
+    }
+    res.json(user);
+  });
+};
 
 module.exports = {
   register,
@@ -203,5 +241,7 @@ module.exports = {
   login,
   restoreUser,
   cambiarPassword,
+  cambiarPasswordAdmin,
+  getUserById,
 };
 

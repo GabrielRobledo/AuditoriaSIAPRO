@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from './contextUsers';
 import Swal from 'sweetalert2';
 import { FiEdit, FiTrash2, FiSearch, FiFileText } from 'react-icons/fi';
 import { Bar, Pie } from 'react-chartjs-2';
@@ -35,6 +36,7 @@ export default function AuditoriasList() {
   const [motivosTotales, setMotivosTotales] = useState([]);
   const [cierres, setCierres] = useState([]);
   const [ampliarGrafico, setAmpliarGrafico] = useState(null); 
+  const { user } = useUser();
 
   useEffect(() => {
     fetch(`${API_URL}/api/motivosTotales`)
@@ -51,7 +53,10 @@ export default function AuditoriasList() {
     fetch(`${API_URL}/api/auditorias`)
     .then(res => res.json())
     .then(data => {
-      const sorted = data.sort((a,b)=>b.idAuditoria - a.idAuditoria);
+      // Filtrar por usuario logueado
+      const { idUsuario } = user || {};
+      const filtradas = idUsuario ? data.filter(a => String(a.idUsuario) === String(idUsuario)) : data;
+      const sorted = filtradas.sort((a,b)=>b.idAuditoria - a.idAuditoria);
       setAuditorias(sorted);
       console.log('auditorias:', sorted); // <- Agregá esto
     })

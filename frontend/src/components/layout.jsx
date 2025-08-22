@@ -1,6 +1,22 @@
-import { Layout, Button, theme, Input, Tooltip, Grid, Avatar, Dropdown, Menu } from 'antd';
+import {
+  Layout,
+  Button,
+  theme,
+  Input,
+  Tooltip,
+  Grid,
+  Avatar,
+  Badge,
+  Dropdown,
+  List,
+  Spin,
+  Menu,
+  Modal,
+} from 'antd';
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import API_URL from '../config';
+import axios from 'axios';
 import Sidebar from './sidebar';
 import '../styles/navbar.css';
 import {
@@ -9,6 +25,7 @@ import {
   LogoutOutlined,
   SearchOutlined,
   UserOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content, Footer } = Layout;
@@ -17,10 +34,13 @@ const { useBreakpoint } = Grid;
 const BasicLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [user, setUser] = useState({ nombre: '', rol: '' });
+  const [novedades, setNovedades] = useState([]);
+  const [loadingNovedades, setLoadingNovedades] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+
   const {
     token: { colorBgContainer },
   } = theme.useToken();
-
 
   const screens = useBreakpoint();
   const navigate = useNavigate();
@@ -29,6 +49,8 @@ const BasicLayout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
     navigate('/login');
   };
 
@@ -40,7 +62,6 @@ const BasicLayout = () => {
     }
   };
 
-  // Menú del avatar
   const userMenu = (
     <Menu>
       <Menu.Item key="account" icon={<UserOutlined />} onClick={() => navigate('/perfil')}>
@@ -52,49 +73,53 @@ const BasicLayout = () => {
     </Menu>
   );
 
-  localStorage.setItem('user', JSON.stringify({ nombre: 'Juan Pérez', rol: 'Administrador' }));
- 
+  const cargarNovedades = () => {
+    setLoadingNovedades(true);
+    axios
+      .get(`${API_URL}/api/novedades`)
+      .then((res) => {
+        setNovedades(res.data);
+      })
+      .catch((err) => console.error('Error al obtener las novedades:', err))
+      .finally(() => setLoadingNovedades(false));
+  };
 
-    useEffect(() => {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    }, []);
-    
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    cargarNovedades();
+  }, []);
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      {/* Sidebar */}
       <Sider
         breakpoint="md"
         collapsedWidth={screens.xs ? 0 : 80}
         collapsible
         collapsed={collapsed}
-        onCollapse={value => setCollapsed(value)}
+        onCollapse={(value) => setCollapsed(value)}
       >
-     <div className="Profile_info">
-        {!collapsed && (
-          <div className="profile-container">
-            <img
-              src="/logo1.png"
-              alt="Profile"
-              className={`Profile_image ${collapsed ? 'hidden' : ''}`}
-            />
-            <div className="profile-text">
-              <h2 className="profile-brand">Audit RGA</h2>
-              <p className="profile-slogan">Tu auditoría de confianza</p>
+        <div className="Profile_info">
+          {!collapsed && (
+            <div className="profile-container">
+              <img
+                src="/logo1.png"
+                alt="Profile"
+                className={`Profile_image ${collapsed ? 'hidden' : ''}`}
+              />
+              <div className="profile-text">
+                <h2 className="profile-brand">Audit RGA</h2>
+                <p className="profile-slogan">Tu auditoría de confianza</p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
-
-
-
+          )}
+        </div>
         <Sidebar onSeleccion={setTablaSeleccionada} />
       </Sider>
 
-      {/* Layout principal */}
       <Layout>
         <Header
           style={{
@@ -108,7 +133,6 @@ const BasicLayout = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-            {/* Botón de menú */}
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -116,7 +140,6 @@ const BasicLayout = () => {
               style={{ fontSize: '20px' }}
             />
 
-            {/* Buscador */}
             <Input
               placeholder="Buscar..."
               prefix={<SearchOutlined />}
@@ -132,10 +155,68 @@ const BasicLayout = () => {
             />
           </div>
 
+          {/* 🔔 Campanita con Modal */}
+          <Badge count={novedades.length} overflowCount={9} style={{ marginRight: 16 }}>
+            <BellOutlined
+              style={{ fontSize: 20, cursor: 'pointer' }}
+              onClick={() => setModalVisible(true)}
+            />
+          </Badge>
+          <Modal
+            title={null}
+            open={modalVisible}
+            onCancel={() => setModalVisible(false)}
+            footer={null}
+            centered
+            width={600}
+            style={{ top: 20 }}
+            bodyStyle={{
+              maxHeight: '60vh',
+              overflowY: 'auto',
+              padding: '24px',
+              background: '#fdfdfd',
+            }}
+          >
+            <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>📰 Novedades recientes</h2>
+
+            <Spin spinning={loadingNovedades}>
+              <List
+                dataSource={novedades}
+                locale={{ emptyText: 'No hay novedades nuevas.' }}
+                renderItem={(item) => (
+                  <List.Item
+                    key={item.id}
+                    style={{
+                      background: '#fff',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                    }}
+                  >
+                    <List.Item.Meta
+                      title={
+                        <div style={{ fontWeight: '600', fontSize: '16px', color: '#333' }}>
+                          {item.titulo}
+                        </div>
+                      }
+                      description={
+                        <div style={{ fontSize: '14px', color: '#555', marginTop: '8px' }}>
+                          {item.mensaje}
+                        </div>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            </Spin>
+          </Modal>
+
+
           {/* Avatar + Dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
             <div style={{ textAlign: 'right', marginRight: '8px', lineHeight: '1.5' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '20px' }}>{user.nombre}</div>
+              <div style={{ fontWeight: 'bold', fontSize: '20px' }}>{user?.nombre || "Usuario"}</div>
               <div style={{ fontSize: '16px', color: 'gray', marginTop: '-4px' }}>{user.rol}</div>
             </div>
             <Dropdown overlay={userMenu} placement="bottomRight" trigger={['click']}>

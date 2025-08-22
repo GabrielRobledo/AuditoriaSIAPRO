@@ -1,4 +1,6 @@
+
 const db = require('../db/conexion');
+const { Asignaciones, AsignacionesSinAuditoria, auditoriasEnProgreso } = require('../models/asignacionesModels');
 
 // Asignar hospitales a un auditor (elimina los anteriores y agrega los nuevos)
 exports.asignarEfectores = (req, res) => {
@@ -28,7 +30,8 @@ exports.asignarEfectores = (req, res) => {
   });
 };
 
-// (opcional) Obtener efectores asignados a un auditor
+
+// Obtener efectores asignados a un auditor (solo ids)
 exports.obtenerEfectoresPorAuditor = (req, res) => {
   const { id } = req.params;
   db.query('SELECT idEfector FROM auditor_efector WHERE idUsuario = ?', [id], (err, results) => {
@@ -60,3 +63,25 @@ exports.obtenerTodasAsignaciones = (req, res) => {
   });
 };
 
+exports.ObtenerAsignacionesSinAuditoria = (req, res) => {
+  const { idUsuario } = req.params;
+  AsignacionesSinAuditoria.getAsignacionesSinAuditoria(idUsuario, (err, asignaciones) => {
+    if (err) {
+      console.error('Error al obtener asignaciones sin auditoría:', err);
+      return res.status(500).json({ msg: 'Error al obtener asignaciones sin auditoría' });
+    }
+    res.json(asignaciones);
+  });
+}
+
+// Obtener auditorías en progreso para un usuario
+exports.obtenerAuditoriasEnProgreso = (req, res) => {
+  const { idUsuario } = req.params;
+  auditoriasEnProgreso.getAuditoriasEnProgreso(idUsuario, (err, auditorias) => {
+    if (err) {
+      console.error('Error al obtener auditorías en progreso:', err);
+      return res.status(500).json({ msg: 'Error al obtener auditorías en progreso' });
+    }
+    res.json(auditorias);
+  });
+}

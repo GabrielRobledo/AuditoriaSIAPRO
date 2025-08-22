@@ -10,6 +10,8 @@ const Usuarios = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [mostrarEliminados, setMostrarEliminados] = useState(false);
   const navigate = useNavigate();
+  const [passwordModalUser, setPasswordModalUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     cargarUsuarios();
@@ -150,6 +152,7 @@ const Usuarios = () => {
               <th style={thStyle}>Eliminar</th>
               <th style={thStyle}>Restaurar</th>
               <th style={thStyle}>Estadisticas</th>
+              <th style={thStyle}>Contraseña</th>
             </tr>
           </thead>
           <tbody>
@@ -213,6 +216,17 @@ const Usuarios = () => {
                       title="Ver resumen"
                     >
                       📊
+                    </button>
+                  )}
+                </td>
+                <td style={tdStyle}>
+                  {!user.delete_add && (
+                    <button
+                      onClick={() => setPasswordModalUser(user)}
+                      style={{ cursor: 'pointer', background: 'none', border: 'none', color: '#1976d2' }}
+                      title="Cambiar contraseña"
+                    >
+                      🔒
                     </button>
                   )}
                 </td>
@@ -281,6 +295,76 @@ const Usuarios = () => {
           </form>
         </div>
       )}
+
+      {passwordModalUser && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+
+              axios.put(`${API_URL}/api/auth/usuarios/password/${passwordModalUser.idUsuario}`, {
+                password: newPassword
+              })
+                .then(() => {
+                  Swal.fire('Éxito', 'Contraseña actualizada correctamente', 'success');
+                  setPasswordModalUser(null);
+                  setNewPassword('');
+                })
+                .catch(() => {
+                  Swal.fire('Error', 'No se pudo cambiar la contraseña', 'error');
+                });
+            }}
+            style={{
+              background: '#fff',
+              padding: '25px 30px',
+              borderRadius: '10px',
+              width: '320px',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px'
+            }}
+          >
+            <h3 style={{ margin: 0, textAlign: 'center', color: '#333' }}>Cambiar contraseña</h3>
+
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Nueva contraseña"
+              required
+              style={inputStyle}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <button type="submit" style={btnPrimary}>
+                Guardar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPasswordModalUser(null);
+                  setNewPassword('');
+                }}
+                style={btnDanger}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
     </div>
   );
 };

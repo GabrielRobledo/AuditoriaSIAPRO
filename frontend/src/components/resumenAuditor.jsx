@@ -28,7 +28,7 @@ const ResumenAuditor = () => {
 
   const fetchUsuario = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/usuarios/${idUsuario}`);
+      const res = await axios.get(`${API_URL}/api/auth/usuarios/${idUsuario}`);
       console.log('Usuario:', res.data);
       setUsuario(res.data);
     } catch (err) {
@@ -100,7 +100,7 @@ const ResumenAuditor = () => {
 
   return (
     <div style={container}>
-      <h2>Resumen del Auditor {usuario ? `${usuario.nombre} ${usuario.apellido}` : `ID ${idUsuario}`}</h2>
+      <h2>Resumen del Auditor: {usuario && usuario.nombre ? `${usuario.nombre}${usuario.apellido ? ' ' + usuario.apellido : ''}` : 'Usuario'}</h2>
 
       {/* KPIs */}
       <div style={kpiContainer}>

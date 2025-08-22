@@ -5,6 +5,7 @@ import '../styles/login.css';
 import API_URL from '../config';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from './contextUsers';
 
 function Login() {
   const [usuario, setUsuario] = useState('');
@@ -12,6 +13,7 @@ function Login() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [cargando, setCargando] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const toggleMostrarPassword = () => setMostrarPassword(!mostrarPassword);
 
@@ -29,12 +31,16 @@ function Login() {
     }
 
     try {
-      setCargando(true);
-      // Simulación de login exitoso con rol
-      const fakeToken = 'token-falso-123456';
-      const fakeRol = 'auditor'; // o 'admin'
-      localStorage.setItem('token', fakeToken);
-      localStorage.setItem('rol', fakeRol);
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
+        usuario,
+        contraseña,
+      });
+
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('rol', user.rol.toLowerCase().trim());
+      setUser(user); 
 
       Swal.fire({
         title: '¡Login exitoso!',
@@ -42,7 +48,11 @@ function Login() {
         icon: 'success',
         confirmButtonText: 'Continuar',
       }).then(() => {
-        navigate('/dashboard'); // Redirige después del login
+        if (user.rol.toLowerCase().trim() === 'administrador') {
+          navigate('/dashboard');
+        } else if (user.rol.toLowerCase().trim() === 'auditor') {
+          navigate('/dashboardAuditor');
+        }
       });
 
     } catch (err) {

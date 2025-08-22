@@ -2,12 +2,14 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import {FaHospital, FaTasks} from 'react-icons/fa';
+import { useUser } from './contextUsers'; 
 import '../styles/cardsHosp.css';
 
 const ListadoHospitales = ({ atenciones }) => {
   const navigate = useNavigate();
 
   const { resumen, tiposAtencionUnicos } = useMemo(() => {
+    const { user } = useUser();
     const resumen = {};
     const tiposSet = new Set();
 

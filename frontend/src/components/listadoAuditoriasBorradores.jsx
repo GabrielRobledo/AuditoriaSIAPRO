@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Doughnut } from 'react-chartjs-2';
+import { useUser } from './contextUsers';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -17,9 +18,11 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const HospConBorradorCards = () => {
   const [borradores, setBorradores] = useState([]);
   const [progresos, setProgresos] = useState({});
+  const { user } = useUser();
   const navigate = useNavigate();
 
-  const idUsuario = 2; // 🔁 En el futuro, obtenerlo dinámicamente
+
+  const idUsuario = user?.idUsuario 
 
   // Primer efecto: obtener hospitales con borrador
   useEffect(() => {

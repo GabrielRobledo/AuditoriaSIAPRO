@@ -6,7 +6,12 @@ const createUser = (nombre, usuario, contraseña, idTipoUsuario, callback) => {
 };
 
 const getUserByUsername = (usuario, callback) => {
-  const sql = 'SELECT * FROM usuarios WHERE usuario = ? AND delete_add IS NULL';
+  const sql = `
+    SELECT u.*, t.tipo AS rol
+    FROM usuarios u
+    LEFT JOIN tipousuarios t ON u.idTipoUsuario = t.idTipoUsuario
+    WHERE u.usuario = ? AND u.delete_add IS NULL
+  `;
   db.query(sql, [usuario], (err, results) => {
     if (err) return callback(err);
     callback(null, results[0]);
