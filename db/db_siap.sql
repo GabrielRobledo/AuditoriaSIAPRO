@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 12-08-2025 a las 13:43:05
+-- Tiempo de generación: 23-08-2025 a las 00:14:57
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.0.30
 
@@ -15239,29 +15239,45 @@ CREATE TABLE `auditor_efector` (
 --
 
 INSERT INTO `auditor_efector` (`idAsignacion`, `idUsuario`, `idEfector`) VALUES
-(46, 4, 1),
-(47, 4, 20),
-(48, 4, 7),
-(49, 3, 2),
-(50, 3, 4),
-(51, 6, 11),
-(52, 6, 6),
-(53, 6, 17),
-(54, 6, 24),
-(55, 6, 21),
-(56, 6, 15),
-(62, 2, 3),
-(63, 2, 8),
-(64, 2, 10),
-(65, 2, 13),
-(70, 16, 9),
-(71, 16, 14),
-(72, 16, 18),
-(73, 16, 38),
-(74, 16, 37),
-(75, 16, 33),
-(76, 16, 28),
-(77, 16, 23);
+(78, 2, 1),
+(79, 2, 2),
+(80, 2, 3),
+(81, 2, 4),
+(82, 2, 5),
+(83, 2, 6),
+(84, 2, 7),
+(85, 2, 8),
+(86, 2, 11),
+(87, 2, 26),
+(88, 2, 28),
+(89, 2, 30),
+(90, 2, 32),
+(91, 2, 33),
+(92, 2, 34),
+(93, 2, 35),
+(94, 2, 38),
+(95, 2, 39),
+(96, 2, 40),
+(97, 2, 42),
+(102, 6, 10),
+(103, 6, 24),
+(104, 6, 17),
+(105, 3, 9),
+(106, 3, 23),
+(107, 3, 13),
+(108, 3, 14),
+(109, 3, 15),
+(110, 3, 25),
+(111, 3, 27),
+(112, 3, 36),
+(113, 4, 18),
+(114, 4, 41),
+(115, 4, 19),
+(116, 4, 20),
+(120, 13, 29),
+(121, 13, 37),
+(122, 16, 12),
+(123, 16, 21);
 
 -- --------------------------------------------------------
 
@@ -16455,7 +16471,9 @@ INSERT INTO `cierres` (`idCierre`, `idUsuario`, `idEfector`, `periodo`, `fechaCi
 (55, 1, 25, '2025-06', '2025-07-22 10:56:55'),
 (56, 1, 26, '2025-07', '2025-07-22 10:57:17'),
 (57, 1, 41, '2025-07', '2025-07-22 11:04:28'),
-(58, 1, 35, '2025-06', '2025-07-22 11:04:53');
+(58, 1, 35, '2025-06', '2025-07-22 11:04:53'),
+(59, 23, 28, '2025-06', '2025-08-14 13:37:52'),
+(60, 2, 42, '2025-07', '2025-08-22 10:34:18');
 
 -- --------------------------------------------------------
 
@@ -16599,7 +16617,22 @@ INSERT INTO `cierres_detalle` (`idDetalle`, `idCierre`, `idAtencion`, `tieneDebi
 (146, 58, 6994, 0, 0.00, ''),
 (147, 58, 6995, 1, 427.67, 'Modulos excluyentes '),
 (148, 58, 6996, 0, 0.00, ''),
-(149, 58, 10590, 0, 0.00, '');
+(149, 58, 10590, 0, 0.00, ''),
+(150, 59, 3673, 1, 12391.18, ''),
+(151, 59, 3678, 1, 24782.36, ''),
+(152, 59, 3681, 0, 0.00, ''),
+(153, 59, 3682, 0, 0.00, ''),
+(154, 59, 8105, 0, 0.00, ''),
+(155, 59, 9703, 0, 0.00, ''),
+(156, 59, 12625, 0, 0.00, ''),
+(157, 59, 14159, 0, 0.00, ''),
+(158, 59, 14588, 0, 0.00, ''),
+(159, 59, 14589, 0, 0.00, ''),
+(160, 59, 14670, 0, 0.00, ''),
+(161, 59, 14671, 0, 0.00, ''),
+(165, 60, 13689, 1, 2280.88, 'Orden mal confeccionada'),
+(166, 60, 13690, 1, 4561.76, 'Falta firma del medico'),
+(167, 60, 13691, 0, 0.00, '');
 
 -- --------------------------------------------------------
 
@@ -23304,19 +23337,21 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`idUsuario`, `nombre`, `usuario`, `contraseña`, `idTipoUsuario`, `delete_add`) VALUES
-(1, 'gabriel robledo', 'lsi.rga@gmail.com', '$2b$10$qd7p3bCij2TWTu43Sjd41eMFR7TjOf5VZuRlIy6dC.jbW0Wfmmanm', 1, NULL),
-(2, 'Luz Pico', 'luz-picon@uep.co', '$2b$10$RS1PT3eeI7VNurRSjo7bUuHGqfQ1NSk7KuXxiw3nb0fDJdYqJdQNW', 2, NULL),
-(3, 'Nery Otero', 'otero-nery@uep.com', '$2b$10$7MBnXjV6hq5SC9Hcn3pSMuRy/xpeT79mev3AZOGAUdTUeKdencCue', 2, NULL),
+(1, 'gabriel robledo', 'lsi.rga@gmail.com', '$2b$10$viLfq1MskUDXnH6I1odweub16PyLCX3GqTh304AvqJNPC/KZVTLpW', 1, NULL),
+(2, 'Luz Pico', 'luz-picon@uep.com', '$2b$10$63FykhlCXHQNebjLp4p8.OTkmC2LkiguxOsnNbwKoFlf8/woD9r3K', 2, NULL),
+(3, 'Nery Otero', 'otero-nery@uep.com', '$2b$10$3SVDNcyHZ16pn6E.vCrI0OdoiEKfAnHVvdq2qNRmo3KkjX53zsOVq', 2, NULL),
 (4, 'Patricia Esquivels', 'esquivels-patri@uep.com', '$2b$10$Pa/PW2NCMN50ywfQhORJuOvlJTmR6mJod9LNBAs.oVPuhj3FiY/4y', 2, NULL),
 (6, 'Obregon Mary', 'obregon-mari123@uep.com', '$2b$10$Li47.haD8Aox6UcDiMf7suZed8e7EQG4nz6DxhSIFvTnYTabN7DLS', 2, NULL),
 (13, 'castillo fabiola', 'faby-cast@uep.com', '$2b$10$KxyUfaKhL6XYu.JBOtaujOlgwsDziNWlq8lzV7jxHXLCOZcbubzPa', 2, NULL),
 (14, 'juan perez', 'juan-perez@uep.com', '$2b$10$K1eRUWPHwVuaaa7jrjCT3.Vjq5ttfH6nID7lUSEroedamwibOPaP.', 2, '2025-07-30 12:59:42'),
 (15, 'Castillo Fabian', 'cast-fab@uep.com', '$2b$10$zz6nNbbNkXr1vsNo0PCK0OyLaa7zQzv5EHarJcUTbyC5regkdKI2G', 1, '2025-07-30 12:59:20'),
 (16, 'Acosta Martin', 'argento-pepo@uep.com', '$2b$10$RdC2IIzzChNvfRfOtzBEsOEv39fxlsj/R6XcqatkM05DRwXAIFldy', 2, NULL),
-(17, 'centurion agustin', 'agus-centu@uep.com', '$2b$10$69suDzfQYrwD/6reQIkA4.Y3lGR2JWOhZEnjLj4d94WBdm4Z38DGy', 1, NULL),
-(18, 'Pablo Robledo', 'roble-pablo@uep.com', '$2b$10$phh5N/3KlttP7Lb/Q6vRrOap8Dk5ViunRgsOrb3QvQsts2M0GpXu.', 1, NULL),
+(17, 'centurion agustin', 'agus-centu@uep.com', '$2b$10$3i4bKdSczyEyFlc5Cf.vPOfSOnEKzYu5RSuaQnavEYh6MF94yXE76', 1, NULL),
+(18, 'Pablo Robledo', 'roble-pablo@uep.com', '$2b$10$4OY5AzmcrhmqLSCwC15nLuDsMod63EP7cDprO8rqJCbnn8qEUO2ae', 1, NULL),
 (19, 'griselda robledo', 'roble-grisel@uep.com', '$2b$10$goDdCuZMt4djmP77B7WXcOOvnMsO.di/IIIwYNWgU1w2SKG7V5.YS', 2, '2025-07-30 13:30:36'),
-(21, 'Luis Enrique', 'lucho-enri@uep.com', '$2b$10$AJkLHPaEAFIHl5qaw7lW8OVNErifGLP/IA7kkO1HrJguBoEWAX1ym', 2, NULL);
+(22, 'Romero Bety', 'bety-romero@uep.com', '$2b$10$5CthonYYnXEtz20Y1PVyXu5xB8UvngFqbbHWdtG4Dhdr9h4EutIaq', 2, '2025-08-13 12:53:10'),
+(23, 'Robledo Gregorio', 'greco-roble@uep.com', '$2b$10$KLc5YK2p78rvDvGgyMGC5OI74LUDhMqQC1jBOD8uo46aLbmjVgsDO', 1, NULL),
+(24, 'Estela Ojeda', 'ojeda-estela@uep.com', '$2b$10$rox6.f1B0eOGE7SVnaXaj.43wkaDa2X3FepozzJa5mzcKllWr8Sz6', 2, NULL);
 
 --
 -- Índices para tablas volcadas
@@ -23459,7 +23494,7 @@ ALTER TABLE `auditoria_en_progreso`
 -- AUTO_INCREMENT de la tabla `auditor_efector`
 --
 ALTER TABLE `auditor_efector`
-  MODIFY `idAsignacion` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
+  MODIFY `idAsignacion` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=127;
 
 --
 -- AUTO_INCREMENT de la tabla `beneficiarios`
@@ -23471,13 +23506,13 @@ ALTER TABLE `beneficiarios`
 -- AUTO_INCREMENT de la tabla `cierres`
 --
 ALTER TABLE `cierres`
-  MODIFY `idCierre` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
+  MODIFY `idCierre` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT de la tabla `cierres_detalle`
 --
 ALTER TABLE `cierres_detalle`
-  MODIFY `idDetalle` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=156;
+  MODIFY `idDetalle` int(5) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle-auditoria`
@@ -23525,7 +23560,7 @@ ALTER TABLE `tipousuarios`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- Restricciones para tablas volcadas
